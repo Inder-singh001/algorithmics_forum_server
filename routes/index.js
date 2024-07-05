@@ -1,0 +1,1 @@
+exports.frontPostCategoryRouter = require('./frontend/PostCategory');
