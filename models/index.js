@@ -2,15 +2,15 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const {
-    DOMAIN,
-    USERNAME,
+    URI,
+    NAME,
     PASSWORD,
     HOST,
     DATABASE_NAME
 } = process.env;
 
 // const connectionString = 'mongodb://localhost:27017/new';
-const connectionString = `${DOMAIN}${USERNAME}:${PASSWORD}@${HOST}/${DATABASE_NAME}`;
+const connectionString = `${URI}${NAME}:${PASSWORD}@${HOST}/${DATABASE_NAME}`;
 
 try
 {
@@ -28,5 +28,9 @@ db.dbConnection = dbConnection;
 
 // Entity
 db.postCategory = require('../entity/PostCategory')(dbConnection, mongoose);
+db.user = require ('../entity/User')(dbConnection, mongoose);
+db.post = require ('../entity/Post')(dbConnection, mongoose);
+db.postVote = require ('../entity/PostVote')(dbConnection, mongoose);
+
 
 module.exports = db;

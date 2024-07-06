@@ -1,0 +1,64 @@
+const { encrypt } = require("../helper/General");
+
+module.exports = (dbConnection, { Schema }) => {
+  let { ObjectId } = Schema;
+
+  let UserSchema = new Schema({
+    author: {
+      type: ObjectId,
+    },
+    first_name: {
+      type: String,
+      required: false,
+    },
+    last_name: {
+      type: String,
+      required: false,
+    },
+    email: {
+      type: String,
+      required: false,
+    },
+    password: {
+      type: String,
+      required: false,
+      set: (value) => {
+        return encrypt(value);
+      },
+    },
+    email_verified: {
+      type: Boolean,
+      required: false,
+    },
+    otp: {
+      type: Number,
+      required: false,
+    },
+    token: {
+      type: String,
+      required: false,
+    },
+    token_expiry_at: {
+      type: Date,
+      required: false,
+    },
+    about_me: {
+      type: String,
+      required: false,
+    },
+    created_at: {
+      type: Date,
+      required: false,
+    },
+    updated_at: {
+      type: Date,
+      required: false,
+    },
+    status: {
+      type: Number,
+      default: 1,
+    },
+  });
+  let user = dbConnection.model("user", UserSchema);
+  return user;
+};

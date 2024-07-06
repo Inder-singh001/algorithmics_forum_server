@@ -1,10 +1,10 @@
- const { postCategory }   = require('../index');
+const { post }   = require('../index');
 const { foreach } = require('../../helper/General');
 
 const insert = async (data) => {    
     try
     {
-        let row = new postCategory();
+        let row = new post();
         row.created_at = new Date();
         
         foreach(data,(key,value)=>{
@@ -36,7 +36,7 @@ const insert = async (data) => {
 const getById = async (id, select = [], joins = []) => {
     try
     {   
-        let record = await postCategory.findById(id,select);
+        let record = await post.findById(id,select);
         
         if(joins)
         {
@@ -55,7 +55,7 @@ const getById = async (id, select = [], joins = []) => {
 const getRow = async (where, select = []) => {
     try
     {
-        let record = await postCategory.findOne(where, select);
+        let record = await post.findOne(where, select);
         return record;
     }
     catch(error)
@@ -69,7 +69,7 @@ const update = async (id, data) => {
     try
     {
         data.updated_at = new Date();
-        let resp = await postCategory.updateOne({"_id":id},data);
+        let resp = await post.updateOne({"_id":id},data);
         if(resp)
         {
             let updated = await getById(id);
@@ -87,9 +87,9 @@ const update = async (id, data) => {
     }
 }
 
-const getAll = async (where = {}, select = [], joins = [], orderBy = {'title':1}, limit = 10) => {
+const getAll = async (where = {}, select = [], joins = [], orderBy = {'created_at':1}, limit = 10) => {
     try {
-        let listing = await postCategory.find(where, select)
+        let listing = await post.find(where, select)
                             .populate(joins)
                             .sort(orderBy)
                             .limit(limit);
@@ -111,7 +111,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
         offset    = page > 1 ? ((page-1)*limit) : 0;
         orderBy   = { [sortField]:direction }
     
-        let listing = postCategory.find(where, select, {skip:offset})
+        let listing = post.find(where, select, {skip:offset})
                         .populate(joins)
                         .sort(orderBy)
                         .limit(limit)
@@ -126,7 +126,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
 const getCounts = async (where = {}) => {
     try
     {
-        let record = await postCategory.countDocuments(where);
+        let record = await post.countDocuments(where);
         return record;
     }
     catch(error)
@@ -142,7 +142,7 @@ const remove = async (id) => {
         let getRecord = await getById(id);
         if(getRecord)
         {
-            let record = await postCategory.deleteOne({'_id':id});
+            let record = await post.deleteOne({'_id':id});
 
             return record;
         }
