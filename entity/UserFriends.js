@@ -1,5 +1,3 @@
-const { update } = require("../models/frontend/PostVote");
-
 module.exports = (dbConnection, { Schema }) => {
     let { ObjectId } = Schema;
     

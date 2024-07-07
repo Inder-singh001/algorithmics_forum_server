@@ -1,10 +1,10 @@
-const { userCategory }   = require('../index'); // Importing the 'UserCate' model from '../index' file
+const { userFriends }   = require('../index'); // Importing the 'userFriends' model from '../index' file
 const { foreach } = require('../../helper/General'); // Importing the 'foreach' function from '../../helper/General' file
 
 const insert = async (data) => {    
     try
     {
-        let row = new userCategory(); // Creating a new instance of the 'userCategory' model
+        let row = new userFriends(); // Creating a new instance of the 'userFriends' model
         row.created_at = new Date(); // Setting the 'created_at' field to the current date and time
         
         foreach(data,(key,value)=>{ // Looping through the 'data' object using the 'foreach' function
@@ -36,7 +36,7 @@ const insert = async (data) => {
 const getById = async (id, select = [], joins = []) => {
     try
     {   
-        let record = await userCategory.findById(id,select); // Finding a record in the 'userCategory' collection by its '_id'
+        let record = await userFriends.findById(id,select); // Finding a record in the 'userFriends' collection by its '_id'
 
         if(joins)
         {
@@ -55,7 +55,7 @@ const getById = async (id, select = [], joins = []) => {
 const getRow = async (where, select = []) => {
     try
     {
-        let record = await userCategory.findOne(where, select); // Finding a single record in the 'userCategory' collection that matches the specified 'where' condition
+        let record = await userFriends.findOne(where, select); // Finding a single record in the 'userFriends' collection that matches the specified 'where' condition
         return record; // Returning the 'record' instance
     }
     catch(error)
@@ -69,7 +69,7 @@ const update = async (id, data) => {
     try
     {
         data.updated_at = new Date(); // Setting the 'updated_at' field to the current date and time
-        let resp = await userCategory.updateOne({"_id":id},data); // Updating a record in the 'userCategory' collection that matches the specified '_id' with the provided 'data'
+        let resp = await userFriends.updateOne({"_id":id},data); // Updating a record in the 'userFriends' collection that matches the specified '_id' with the provided 'data'
 
         if(resp)
         {
@@ -90,10 +90,10 @@ const update = async (id, data) => {
 
 const getAll = async (where = {}, select = [], joins = [], orderBy = {'created_at':1}, limit = 10) => {
     try {
-        let listing = await userCategory.find(where, select)
+        let listing = await userFriends.find(where, select)
                             .populate(joins)
                             .sort(orderBy)
-                            .limit(limit); // Retrieving multiple records from the 'userCategory' collection based on the specified conditions
+                            .limit(limit); // Retrieving multiple records from the 'userFriends' collection based on the specified conditions
 
         return listing; // Returning the array of records
     } catch (error) {
@@ -112,10 +112,10 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
         offset    = page > 1 ? ((page-1)*limit) : 0;
         orderBy   = { [sortField]:direction }
     
-        let listing = userCategory.find(where, select, {skip:offset})
+        let listing = userFriends.find(where, select, {skip:offset})
                         .populate(joins)
                         .sort(orderBy)
-                        .limit(limit); // Retrieving multiple records from the 'userCategory' collection based on the specified conditions
+                        .limit(limit); // Retrieving multiple records from the 'userFriends' collection based on the specified conditions
 
         return listing; // Returning the array of records
     } catch (error) {
@@ -127,7 +127,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
 const getCounts = async (where = {}) => {
     try
     {
-        let record = await userCategory.countDocuments(where); // Counting the number of documents in the 'userCategory' collection that match the specified conditions
+        let record = await userFriends.countDocuments(where); // Counting the number of documents in the 'userFriends' collection that match the specified conditions
         return record; // Returning the count
     }
     catch(error)
@@ -144,7 +144,7 @@ const remove = async (id) => {
 
         if(getRecord)
         {
-            let record = await userCategory.deleteOne({'_id':id}); // Deleting a record from the 'userCategory' collection that matches the specified '_id'
+            let record = await userFriends.deleteOne({'_id':id}); // Deleting a record from the 'userFriends' collection that matches the specified '_id'
 
             return record; // Returning the result of the delete operation
         }

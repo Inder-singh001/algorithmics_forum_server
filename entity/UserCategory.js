@@ -6,9 +6,10 @@ module.exports = (dbConnection, {Schema}) => {
         author: {
             type:ObjectId
         },
-        category_id: {
+        cat_id: {
             type:ObjectId,
-            required:true,
+            required:false,
+            ref : "post_category"
         },
         user_id: {
             type:ObjectId,
