@@ -5,11 +5,13 @@ module.exports = (dbConnection, { Schema }) => {
     author: {
       type: ObjectId,
     },
+
     user_id: {
       type: ObjectId,
       required: false,
       ref: "user",
     },
+
     post_id: {
       type: ObjectId,
       required: false,
@@ -21,19 +23,17 @@ module.exports = (dbConnection, { Schema }) => {
       required: true,
       default: 0,
     },
+
     created_at: {
       type: Date,
       required: false,
     },
+
     updated_at: {
       type: Date,
       required: false,
     },
-    cat_id: {
-      type: ObjectId,
-      required: false,
-      ref: "post_category",
-    },
+
   });
 
   let postVote = dbConnection.model("post_vote", PostVoteSchema);

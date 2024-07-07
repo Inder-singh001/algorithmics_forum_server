@@ -1,6 +1,7 @@
 const { user }   = require('../index');
 const { foreach } = require('../../helper/General');
 
+// Function to insert a new user record
 const insert = async (data) => {    
     try
     {
@@ -14,9 +15,9 @@ const insert = async (data) => {
 
         if(resp)
         {
-            if(resp.title)
+            if(resp.first_name)
             {
-                resp.slug = resp.title.toLowerCase().replaceAll(/\s/g,'-') + resp._id;
+                resp.slug = resp.first_name.toLowerCase().replaceAll(/\s/g,'-') + resp._id;
                 resp.save()
             }
             return resp;
@@ -33,6 +34,7 @@ const insert = async (data) => {
     }    
 }
 
+// Function to get a user record by ID
 const getById = async (id, select = [], joins = []) => {
     try
     {   
@@ -52,6 +54,7 @@ const getById = async (id, select = [], joins = []) => {
     }
 }
 
+// Function to get a single user record based on a condition
 const getRow = async (where, select = []) => {
     try
     {
@@ -65,6 +68,7 @@ const getRow = async (where, select = []) => {
     }
 }
 
+// Function to update a user record
 const update = async (id, data) => {
     try
     {
@@ -87,6 +91,7 @@ const update = async (id, data) => {
     }
 }
 
+// Function to get all user records
 const getAll = async (where = {}, select = [], joins = [], orderBy = {'first_name':1}, limit = 10) => {
     try {
         let listing = await user.find(where, select)
@@ -101,6 +106,7 @@ const getAll = async (where = {}, select = [], joins = [], orderBy = {'first_nam
     }
 }
 
+// Function to get a paginated listing of user records
 const getListing = async (req, select = {}, where = {}, joins = []) => {
     try {
         let {sort, direction, limit, offset, page} = req.query;
@@ -123,6 +129,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
     }
 }
 
+// Function to get the count of user records based on a condition
 const getCounts = async (where = {}) => {
     try
     {
@@ -136,6 +143,7 @@ const getCounts = async (where = {}) => {
     }
 }
 
+// Function to remove a user record
 const remove = async (id) => {
     try
     {
@@ -158,12 +166,12 @@ const remove = async (id) => {
 }
 
 module.exports = { 
-    insert,
-    update,
-    getById,
-    getRow,
-    getAll,
-    getListing,
-    getCounts,
-    remove
+    insert, // Insert a new user record
+    update, // Update a user record
+    getById, // Get a user record by ID
+    getRow, // Get a single user record based on a condition
+    getAll, // Get all user records
+    getListing, // Get a paginated listing of user records
+    getCounts, // Get the count of user records based on a condition
+    remove // Remove a user record
 };

@@ -1,17 +1,17 @@
-const postCategoryModel  =  require("../../models/frontend/PostCategory")
-const { validatorMake }  = require('../../helper/General')
+const postCategoryModel  =  require("../../models/frontend/PostCategory") // Importing the PostCategory model
+const { validatorMake }  = require('../../helper/General') // Importing the validatorMake function
 
 const index = async (req, res) => {
-    let { search, status, from_date, end_date }  = req.query
-    let where       = {};
+    let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
+    let where       = {}; // Initializing the where object
     
     if(search)
     {
-        search = new RegExp(search,'i')
+        search = new RegExp(search,'i') // Creating a case-insensitive regular expression for search
         where = {
             $or:[
                 {
-                    "title":search
+                    "title":search // Adding the search condition to the where object
                 }
             ]
         }
@@ -21,7 +21,7 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'status':status
+            'status':status // Adding the status condition to the where object
         }  
     }
 
@@ -31,7 +31,7 @@ const index = async (req, res) => {
             ...where,
             'created_at':{
                 $gte:new Date(from_date),
-                $lte:new Date(end_date+" 23:59:59")
+                $lte:new Date(end_date+" 23:59:59") // Adding the date range condition to the where object
             }
         } 
     }
@@ -40,7 +40,7 @@ const index = async (req, res) => {
         where = {
             ...where,
             'created_at':{
-                $lte:new Date(end_date+" 23:59:59")
+                $lte:new Date(end_date+" 23:59:59") // Adding the end date condition to the where object
             }
         } 
     }
@@ -49,26 +49,15 @@ const index = async (req, res) => {
         where = {
             ...where,
             'created_at':{
-                $gte:new Date(from_date),
+                $gte:new Date(from_date), // Adding the start date condition to the where object
             }
         } 
     }
 
-    // let select = [
-    //     'slug',
-    //     'title',
-    //     'status',
-    //     'created_at'
-    // ];
-
-    // let select = {
-    //     "_id":0
-    // }
-
-    let data = await postCategoryModel.getListing(req, [], where);    
+    let data = await postCategoryModel.getListing(req, [], where); // Fetching data based on the where conditions   
     if(data)
     {
-        let count = await postCategoryModel.getCounts(where)
+        let count = await postCategoryModel.getCounts(where) // Counting the number of records based on the where conditions
         res.send({
             'status':true,
             'message':'Data Fetch Successfully',
@@ -87,7 +76,7 @@ const index = async (req, res) => {
 };
 
 const detail = async (req, res) => {
-    let {id} = req.params;
+    let {id} = req.params; // Extracting the id parameter from the request
     
     let select = [
         'slug',
@@ -97,8 +86,7 @@ const detail = async (req, res) => {
         'updated_at',
     ];
 
-    let data = await postCategoryModel.getById(id, select);
-    
+    let data = await postCategoryModel.getById(id, select); // Fetching data for a specific id
     if(data)
     {
         res.send({
@@ -118,17 +106,17 @@ const detail = async (req, res) => {
 };
 
 const add = async (req, res) => {
-    let data = req.body;
+    let data = req.body; // Extracting the data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required"
+            "title": "required" // Validating the presence of the title field
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.insert(data);
+        let resp = await postCategoryModel.insert(data); // Inserting the data into the database
         if(resp)
         {
             res.send({
@@ -150,24 +138,24 @@ const add = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors
+            'message':validatorRules.errors // Sending validation errors if any
         });
     }
 };
 
 const update = async (req, res) => {
-    let {id} = req.params;
-    let data = req.body;
+    let {id} = req.params; // Extracting the id parameter from the request
+    let data = req.body; // Extracting the data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required"
+            "title": "required", // Validating the presence of the title field
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data);
+        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
         if(resp)
         {
             res.send({
@@ -189,24 +177,24 @@ const update = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors
+            'message':validatorRules.errors // Sending validation errors if any
         });
     }
 };
 
 const updateStatus = async (req, res) => {
-    let {id} = req.params;
-    let data = req.body;
+    let {id} = req.params; // Extracting the id parameter from the request
+    let data = req.body; // Extracting the data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "status": "required"
+            "status": "required" // Validating the presence of the status field
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data);
+        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
         if(resp)
         {
             res.send({
@@ -228,15 +216,15 @@ const updateStatus = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors
+            'message':validatorRules.errors // Sending validation errors if any
         });
     }
 };
 
 const deleteRow = async (req, res) => {
-    let {id} = req.params;
+    let {id} = req.params; // Extracting the id parameter from the request
     
-    let resp = await postCategoryModel.remove(id);
+    let resp = await postCategoryModel.remove(id); // Deleting the record with the given id
     
     if(resp)
     {
@@ -256,4 +244,4 @@ const deleteRow = async (req, res) => {
     }
 };
 
-module.exports = { add, detail, index, update, updateStatus, deleteRow };
+module.exports = { add, detail, index, update, updateStatus, deleteRow }; // Exporting the controller functions

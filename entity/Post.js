@@ -31,11 +31,11 @@ module.exports = (dbConnection, {Schema}) => {
             required:false
         },
         created_at:{
-            type:String,
+            type:Date,
             required:false,
         },
         updated_at:{
-            type:String,
+            type:Date,
             required:false,
         },
         cat_id:{

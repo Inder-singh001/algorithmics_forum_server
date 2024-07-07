@@ -28,7 +28,7 @@ module.exports = (dbConnection, { Schema }) => {
         parent_id: {
             type: ObjectId,
             required: false,
-            // ref: "post",
+            ref: "author",
         },
         });
 

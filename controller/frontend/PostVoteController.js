@@ -1,7 +1,5 @@
 const postVoteModel  =  require("../../models/frontend/PostVote") // Importing the PostVote model
-const { postVote } = require('../../models/index') // Importing the postVote model from index.js
-const { validatorMake }  = require('../../helper/General'); // Importing the validatorMake function from General.js
-const { populate } = require("dotenv"); // Importing the populate function from dotenv
+const { validatorMake }  = require('../../helper/General') // Importing the validatorMake function
 
 const index = async (req, res) => {
     let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
@@ -57,6 +55,7 @@ const index = async (req, res) => {
     }
 
     let select = [
+        'title',
         'user_id',
         'post_id',
         'type',
@@ -68,22 +67,19 @@ const index = async (req, res) => {
     let joins = [
         {
             path:'user_id',
-            select:{
-                'created_at':0
-            }
         },
         {
             path:'post_id',
-            select:{
-                'created_at':0
-            }
+        },
+        {
+            path:'cat_id',
         }
     ]
 
-    let data = await postModel.getListing(req, select, where, joins); // Fetching data from the postModel
+    let data = await postVoteModel.getListing(req, select, where, joins); // Fetching data from the postVoteModel
     if(data)
     {
-        let count = await postModel.getCounts(where) // Getting the count of records
+        let count = await postVoteModel.getCounts(where) // Getting the count of records
         res.send({
             'status':true,
             'message':'Data Fetch Successfully',
@@ -112,7 +108,7 @@ const detail = async (req, res) => {
         'updated_at',
     ];
 
-    let data = await postModel.getById(id, select); // Fetching data from the postModel
+    let data = await postVoteModel.getById(id, select); // Fetching data from the postVoteModel
     
     if(data)
     {
@@ -139,13 +135,13 @@ const add = async (req, res) => {
         {
             "user_id": "required",
             "post_id":"required",
-            "type":"required",
+            "type":"required", 
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postModel.insert(data); // Inserting data into the postModel
+        let resp = await postVoteModel.insert(data); // Inserting data into the postVoteModel
         if(resp)
         {
             res.send({
@@ -184,7 +180,7 @@ const update = async (req, res) => {
 
     if(!validatorRules.fails())
     {
-        let resp = await postModel.update(id,data); // Updating data in the postModel
+        let resp = await postVoteModel.update(id,data); // Updating data in the postVoteModel
         if(resp)
         {
             res.send({
@@ -223,7 +219,7 @@ const updateStatus = async (req, res) => {
 
     if(!validatorRules.fails())
     {
-        let resp = await postModel.update(id,data); // Updating data in the postModel
+        let resp = await postVoteModel.update(id,data); // Updating data in the postVoteModel
         if(resp)
         {
             res.send({
@@ -253,7 +249,7 @@ const updateStatus = async (req, res) => {
 const deleteRow = async (req, res) => {
     let {id} = req.params; // Getting the id parameter
     
-    let resp = await postModel.remove(id); // Removing the record from the postModel
+    let resp = await postVoteModel.remove(id); // Removing the record from the postVoteModel
     
     if(resp)
     {

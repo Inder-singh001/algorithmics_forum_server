@@ -8,8 +8,11 @@ module.exports = (dbConnection, { Schema }) => {
       type: ObjectId,
     },
     first_name: {
-      type: String,
-      required: false,
+        type: String,
+        required: false,
+        get: function(value) {
+        return value + this.last_name;
+        },
     },
     last_name: {
       type: String,

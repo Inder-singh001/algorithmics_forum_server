@@ -125,7 +125,11 @@ const add = async (req, res) => {
     let validatorRules = await validatorMake(
         data,
         {
-            "first_name": "required"
+            "first_name": "required",
+            "last_name": "required",
+            "email": "required",
+            "password": "required",
+            "about_me": "required",
         }
     );
 
@@ -164,7 +168,10 @@ const update = async (req, res) => {
     let validatorRules = await validatorMake(
         data,
         {
-            "first_name": "required"
+            "first_name": "required",
+            "last_name": "required",
+            "email": "required",
+            "about_me": "required",
         }
     );
 
