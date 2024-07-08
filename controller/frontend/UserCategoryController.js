@@ -31,7 +31,7 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
+            'updated_at':{
                 $gte:new Date(from_date),
                 $lte:new Date(end_date+" 23:59:59") // Filtering posts by created date range
             }
@@ -41,7 +41,7 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
+            'updated_at':{
                 $lte:new Date(end_date+" 23:59:59") // Filtering posts by end date
             }
         } 
@@ -50,31 +50,31 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
+            'updated_at':{
                 $gte:new Date(from_date), // Filtering posts by start date
             }
         } 
     }
 
     let select = [
-        'cat_id',
         'user_id',
-        'created_at'
+        'cat_id',
+        'updated_at'
     ];
 
     let joins = [
         {
-            path:'cat_id',
+            path:'user_id',
             select:{
-                'created_at':0 // Excluding the created_at field from the cat_id join
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
             }
         },
         {
-            path:'user_id',
+            path:'cat_id',
             select:{
-                'created_at':0 // Excluding the created_at field from the cat_id join
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
             }
-        }
+        },
     ]
 
     let data = await userCategoryModel.getListing(req, select, where, joins); // Fetching posts based on the filters
@@ -102,12 +102,33 @@ const detail = async (req, res) => {
     let {id} = req.params; // Getting the post ID from the request parameters
     
     let select = [
-        'cat_id',
         'user_id',
-        'created_at'
+        'cat_id',
+        'updated_at'
     ];
+    let joins = [
+        {
+            path:'user_id',
+            select:{
+                'updated_at':0,
+                'created_at':0,
+                'status':0,
+                'password':0,
+                'about_me':0 // Excluding the updated_at field from the cat_id join
+            }
+        },
+        {
+            path:'cat_id',
+            select:{
+                'updated_at':0,
+                'created_at':0,
+                'status':0,
+                'slug':0     // Excluding the updated_at field from the cat_id join
+            }
+        }
+    ]
 
-    let data = await userCategoryModel.getById(id, select); // Fetching the post details by ID
+    let data = await userCategoryModel.getById(id, select,joins); // Fetching the post details by ID
     
     if(data)
     {

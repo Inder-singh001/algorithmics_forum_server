@@ -107,6 +107,20 @@ const detail = async (req, res) => {
         'created_at',
         'updated_at',
     ];
+    let joins = [
+        {
+            path:'user_id',
+            select:{
+                'created_at':0 // Excluding the created_at field from the cat_id join
+            }
+        },
+        {
+            path:'friend_id',
+            select:{
+                'created_at':0 // Excluding the created_at field from the cat_id join
+            }
+        }
+    ]
 
     let data = await userFriendsModel.getById(id, select); // Fetching the post details by ID
     

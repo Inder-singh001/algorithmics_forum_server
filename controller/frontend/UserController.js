@@ -60,14 +60,20 @@ const index = async (req, res) => {
         'email',
         'about_me',
         'created_at',
-        'status'
+        'status',
+        'cat_id'
     ];
 
-    // let select = {
-    //     "_id":0
-    // }
+    let joins = [
+        {
+            path:'cat_id',
+            select:{
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            }
+        }
+    ]
 
-    let data = await userModel.getListing(req, select, where);    
+    let data = await userModel.getListing(req, select, where, joins);    
     if(data)
     {
         let count = await userModel.getCounts(where)
@@ -97,10 +103,19 @@ const detail = async (req, res) => {
         'email',
         'about_me',
         'created_at',
-        'status'
+        'status',
+        'author'
     ];
+    let joins = [
+        {
+            path:'author',
+            select:{
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            }
+        }
+    ]
 
-    let data = await userModel.getById(id, select);
+    let data = await userModel.getById(id, select,joins);
     
     if(data)
     {

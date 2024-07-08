@@ -110,7 +110,6 @@ const isJSON = (str) => {
         return false;
     }
 }
-
 module.exports = {
     foreach,
     validatorMake,
@@ -121,5 +120,5 @@ module.exports = {
     _datetime,
     _date,
     getRandomNumber,
-    isJSON
+    isJSON,
 }
