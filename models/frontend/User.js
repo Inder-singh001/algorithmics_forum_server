@@ -1,10 +1,11 @@
- const { postCategory }   = require('../index');
+const { user }   = require('../index');
 const { foreach } = require('../../helper/General');
 
+// Function to insert a new user record
 const insert = async (data) => {    
     try
     {
-        let row = new postCategory();
+        let row = new user();
         row.created_at = new Date();
         
         foreach(data,(key,value)=>{
@@ -14,9 +15,9 @@ const insert = async (data) => {
 
         if(resp)
         {
-            if(resp.title)
+            if(resp.first_name)
             {
-                resp.slug = resp.title.toLowerCase().replaceAll(/\s/g,'-') + resp._id;
+                resp.slug = resp.first_name.toLowerCase().replaceAll(/\s/g,'-') + resp._id;
                 resp.save()
             }
             return resp;
@@ -33,10 +34,11 @@ const insert = async (data) => {
     }    
 }
 
+// Function to get a user record by ID
 const getById = async (id, select = [], joins = []) => {
     try
     {   
-        let record = await postCategory.findById(id,select);
+        let record = await user.findById(id,select);
         
         if(joins)
         {
@@ -52,10 +54,11 @@ const getById = async (id, select = [], joins = []) => {
     }
 }
 
+// Function to get a single user record based on a condition
 const getRow = async (where, select = []) => {
     try
     {
-        let record = await postCategory.findOne(where, select);
+        let record = await user.findOne(where, select);
         return record;
     }
     catch(error)
@@ -65,11 +68,12 @@ const getRow = async (where, select = []) => {
     }
 }
 
+// Function to update a user record
 const update = async (id, data) => {
     try
     {
         data.updated_at = new Date();
-        let resp = await postCategory.updateOne({"_id":id},data);
+        let resp = await user.updateOne({"_id":id},data);
         if(resp)
         {
             let updated = await getById(id);
@@ -87,9 +91,10 @@ const update = async (id, data) => {
     }
 }
 
-const getAll = async (where = {}, select = [], joins = [], orderBy = {'title':1}, limit = 10) => {
+// Function to get all user records
+const getAll = async (where = {}, select = [], joins = [], orderBy = {'first_name':1}, limit = 10) => {
     try {
-        let listing = await postCategory.find(where, select)
+        let listing = await user.find(where, select)
                             .populate(joins)
                             .sort(orderBy)
                             .limit(limit);
@@ -101,6 +106,7 @@ const getAll = async (where = {}, select = [], joins = [], orderBy = {'title':1}
     }
 }
 
+// Function to get a paginated listing of user records
 const getListing = async (req, select = {}, where = {}, joins = []) => {
     try {
         let {sort, direction, limit, offset, page} = req.query;
@@ -111,7 +117,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
         offset    = page > 1 ? ((page-1)*limit) : 0;
         orderBy   = { [sortField]:direction }
     
-        let listing = postCategory.find(where, select, {skip:offset})
+        let listing = user.find(where, select, {skip:offset})
                         .populate(joins)
                         .sort(orderBy)
                         .limit(limit)
@@ -123,10 +129,11 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
     }
 }
 
+// Function to get the count of user records based on a condition
 const getCounts = async (where = {}) => {
     try
     {
-        let record = await postCategory.countDocuments(where);
+        let record = await user.countDocuments(where);
         return record;
     }
     catch(error)
@@ -136,13 +143,14 @@ const getCounts = async (where = {}) => {
     }
 }
 
+// Function to remove a user record
 const remove = async (id) => {
     try
     {
         let getRecord = await getById(id);
         if(getRecord)
         {
-            let record = await postCategory.deleteOne({'_id':id});
+            let record = await user.deleteOne({'_id':id});
 
             return record;
         }
@@ -158,12 +166,12 @@ const remove = async (id) => {
 }
 
 module.exports = { 
-    insert,
-    update,
-    getById,
-    getRow,
-    getAll,
-    getListing,
-    getCounts,
-    remove
+    insert, // Insert a new user record
+    update, // Update a user record
+    getById, // Get a user record by ID
+    getRow, // Get a single user record based on a condition
+    getAll, // Get all user records
+    getListing, // Get a paginated listing of user records
+    getCounts, // Get the count of user records based on a condition
+    remove // Remove a user record
 };

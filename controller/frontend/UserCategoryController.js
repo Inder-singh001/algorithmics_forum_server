@@ -1,9 +1,11 @@
-const postCategoryModel  =  require("../../models/frontend/PostCategory") // Importing the PostCategory model
-const { validatorMake }  = require('../../helper/General') // Importing the validatorMake function
+const userCategoryModel  =  require("../../models/frontend/UserCategory") // Importing the Post model
+const { postCategory } = require('../../models/index') // Importing the postCategory model
+const { validatorMake }  = require('../../helper/General'); // Importing the validatorMake function
+const { populate } = require("dotenv"); // Importing the populate function from dotenv
 
 const index = async (req, res) => {
     let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
-    let where       = {}; // Initializing the where object
+    let where       = {};
     
     if(search)
     {
@@ -11,7 +13,7 @@ const index = async (req, res) => {
         where = {
             $or:[
                 {
-                    "title":search // Adding the search condition to the where object
+                    "title":search // Searching for posts with matching title
                 }
             ]
         }
@@ -21,7 +23,7 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'status':status // Adding the status condition to the where object
+            'status':status // Filtering posts by status
         }  
     }
 
@@ -29,9 +31,9 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
+            'updated_at':{
                 $gte:new Date(from_date),
-                $lte:new Date(end_date+" 23:59:59") // Adding the date range condition to the where object
+                $lte:new Date(end_date+" 23:59:59") // Filtering posts by created date range
             }
         } 
     }
@@ -39,8 +41,8 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
-                $lte:new Date(end_date+" 23:59:59") // Adding the end date condition to the where object
+            'updated_at':{
+                $lte:new Date(end_date+" 23:59:59") // Filtering posts by end date
             }
         } 
     }
@@ -48,16 +50,37 @@ const index = async (req, res) => {
     {
         where = {
             ...where,
-            'created_at':{
-                $gte:new Date(from_date), // Adding the start date condition to the where object
+            'updated_at':{
+                $gte:new Date(from_date), // Filtering posts by start date
             }
         } 
     }
 
-    let data = await postCategoryModel.getListing(req, [], where); // Fetching data based on the where conditions   
+    let select = [
+        'user_id',
+        'cat_id',
+        'updated_at'
+    ];
+
+    let joins = [
+        {
+            path:'user_id',
+            select:{
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            }
+        },
+        {
+            path:'cat_id',
+            select:{
+                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            }
+        },
+    ]
+
+    let data = await userCategoryModel.getListing(req, select, where, joins); // Fetching posts based on the filters
     if(data)
     {
-        let count = await postCategoryModel.getCounts(where) // Counting the number of records based on the where conditions
+        let count = await userCategoryModel.getCounts(where) // Getting the count of posts based on the filters
         res.send({
             'status':true,
             'message':'Data Fetch Successfully',
@@ -76,17 +99,37 @@ const index = async (req, res) => {
 };
 
 const detail = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
+    let {id} = req.params; // Getting the post ID from the request parameters
     
     let select = [
-        'slug',
-        'title',
-        'status',
-        'created_at',
-        'updated_at',
+        'user_id',
+        'cat_id',
+        'updated_at'
     ];
+    let joins = [
+        {
+            path:'user_id',
+            select:{
+                'updated_at':0,
+                'created_at':0,
+                'status':0,
+                'password':0,
+                'about_me':0 // Excluding the updated_at field from the cat_id join
+            }
+        },
+        {
+            path:'cat_id',
+            select:{
+                'updated_at':0,
+                'created_at':0,
+                'status':0,
+                'slug':0     // Excluding the updated_at field from the cat_id join
+            }
+        }
+    ]
 
-    let data = await postCategoryModel.getById(id, select); // Fetching data for a specific id
+    let data = await userCategoryModel.getById(id, select,joins); // Fetching the post details by ID
+    
     if(data)
     {
         res.send({
@@ -106,17 +149,18 @@ const detail = async (req, res) => {
 };
 
 const add = async (req, res) => {
-    let data = req.body; // Extracting the data from the request body
+    let data = req.body; // Getting the post data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required" // Validating the presence of the title field
+            "user_id": "required",
+            "cat_id":"required" // Validating that the title field is required
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.insert(data); // Inserting the data into the database
+        let resp = await userCategoryModel.insert(data); // Inserting the post data into the database
         if(resp)
         {
             res.send({
@@ -144,18 +188,19 @@ const add = async (req, res) => {
 };
 
 const update = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
-    let data = req.body; // Extracting the data from the request body
+    let {id} = req.params; // Getting the post ID from the request parameters
+    let data = req.body; // Getting the updated post data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required", // Validating the presence of the title field
+           "user_id": "required",
+            "cat_id":"required",  // Validating that the first_name field is required
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
+        let resp = await userCategoryModel.update(id,data); // Updating the post data in the database
         if(resp)
         {
             res.send({
@@ -183,18 +228,18 @@ const update = async (req, res) => {
 };
 
 const updateStatus = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
-    let data = req.body; // Extracting the data from the request body
+    let {id} = req.params; // Getting the post ID from the request parameters
+    let data = req.body; // Getting the updated status data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "status": "required" // Validating the presence of the status field
+            "status": "required" // Validating that the status field is required
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
+        let resp = await userCategoryModel.update(id,data); // Updating the post status in the database
         if(resp)
         {
             res.send({
@@ -222,9 +267,9 @@ const updateStatus = async (req, res) => {
 };
 
 const deleteRow = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
+    let {id} = req.params; // Getting the post ID from the request parameters
     
-    let resp = await postCategoryModel.remove(id); // Deleting the record with the given id
+    let resp = await userCategoryModel.remove(id); // Deleting the post from the database
     
     if(resp)
     {
@@ -244,4 +289,4 @@ const deleteRow = async (req, res) => {
     }
 };
 
-module.exports = { add, detail, index, update, updateStatus, deleteRow }; // Exporting the controller functions
+module.exports = { add, detail, index, update, updateStatus, deleteRow };

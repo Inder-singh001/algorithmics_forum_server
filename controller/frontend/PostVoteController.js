@@ -1,4 +1,4 @@
-const postCategoryModel  =  require("../../models/frontend/PostCategory") // Importing the PostCategory model
+const postVoteModel  =  require("../../models/frontend/PostVote") // Importing the PostVote model
 const { validatorMake }  = require('../../helper/General') // Importing the validatorMake function
 
 const index = async (req, res) => {
@@ -7,21 +7,21 @@ const index = async (req, res) => {
     
     if(search)
     {
-        search = new RegExp(search,'i') // Creating a case-insensitive regular expression for search
+        search = new RegExp(search,'i') // Creating a regular expression for search
         where = {
             $or:[
                 {
-                    "title":search // Adding the search condition to the where object
+                    "created_at":search // Adding the search condition to the where object
                 }
             ]
         }
     }
 
-    if(status >= 0)
+    if(type >= 0)
     {
         where = {
             ...where,
-            'status':status // Adding the status condition to the where object
+            'type':type // Adding the status condition to the where object
         }  
     }
 
@@ -54,10 +54,32 @@ const index = async (req, res) => {
         } 
     }
 
-    let data = await postCategoryModel.getListing(req, [], where); // Fetching data based on the where conditions   
+    let select = [
+        'title',
+        'user_id',
+        'post_id',
+        'type',
+        'created_at',
+        'updated_at',
+        'cat_id'
+    ];
+
+    let joins = [
+        {
+            path:'user_id',
+        },
+        {
+            path:'post_id',
+        },
+        {
+            path:'cat_id',
+        }
+    ]
+
+    let data = await postVoteModel.getListing(req, select, where, joins); // Fetching data from the postVoteModel
     if(data)
     {
-        let count = await postCategoryModel.getCounts(where) // Counting the number of records based on the where conditions
+        let count = await postVoteModel.getCounts(where) // Getting the count of records
         res.send({
             'status':true,
             'message':'Data Fetch Successfully',
@@ -76,17 +98,29 @@ const index = async (req, res) => {
 };
 
 const detail = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
+    let {id} = req.params; // Getting the id parameter
     
     let select = [
-        'slug',
-        'title',
-        'status',
+        'user_id',
+        'post_id',
+        'type',
         'created_at',
         'updated_at',
     ];
+    let joins = [
+        {
+            path:'user_id',
+        },
+        {
+            path:'post_id',
+        },
+        {
+            path:'cat_id',
+        }
+    ]
 
-    let data = await postCategoryModel.getById(id, select); // Fetching data for a specific id
+    let data = await postVoteModel.getById(id, select,joins); // Fetching data from the postVoteModel
+    
     if(data)
     {
         res.send({
@@ -106,17 +140,19 @@ const detail = async (req, res) => {
 };
 
 const add = async (req, res) => {
-    let data = req.body; // Extracting the data from the request body
+    let data = req.body; // Getting the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required" // Validating the presence of the title field
+            "user_id": "required",
+            "post_id":"required",
+            "type":"required", 
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.insert(data); // Inserting the data into the database
+        let resp = await postVoteModel.insert(data); // Inserting data into the postVoteModel
         if(resp)
         {
             res.send({
@@ -138,24 +174,24 @@ const add = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors // Sending validation errors if any
+            'message':validatorRules.errors
         });
     }
 };
 
 const update = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
-    let data = req.body; // Extracting the data from the request body
+    let {id} = req.params; // Getting the id parameter
+    let data = req.body; // Getting the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "title": "required", // Validating the presence of the title field
+            "type":"required",
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
+        let resp = await postVoteModel.update(id,data); // Updating data in the postVoteModel
         if(resp)
         {
             res.send({
@@ -177,24 +213,24 @@ const update = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors // Sending validation errors if any
+            'message':validatorRules.errors
         });
     }
 };
 
 const updateStatus = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
-    let data = req.body; // Extracting the data from the request body
+    let {id} = req.params; // Getting the id parameter
+    let data = req.body; // Getting the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "status": "required" // Validating the presence of the status field
+            "type": "required"
         }
     );
 
     if(!validatorRules.fails())
     {
-        let resp = await postCategoryModel.update(id,data); // Updating the record with the given id
+        let resp = await postVoteModel.update(id,data); // Updating data in the postVoteModel
         if(resp)
         {
             res.send({
@@ -216,15 +252,15 @@ const updateStatus = async (req, res) => {
     {
         res.send({
             'status':false,
-            'message':validatorRules.errors // Sending validation errors if any
+            'message':validatorRules.errors
         });
     }
 };
 
 const deleteRow = async (req, res) => {
-    let {id} = req.params; // Extracting the id parameter from the request
+    let {id} = req.params; // Getting the id parameter
     
-    let resp = await postCategoryModel.remove(id); // Deleting the record with the given id
+    let resp = await postVoteModel.remove(id); // Removing the record from the postVoteModel
     
     if(resp)
     {
@@ -244,4 +280,4 @@ const deleteRow = async (req, res) => {
     }
 };
 
-module.exports = { add, detail, index, update, updateStatus, deleteRow }; // Exporting the controller functions
+module.exports = { add, detail, index, update, updateStatus, deleteRow };

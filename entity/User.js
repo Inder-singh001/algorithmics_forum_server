@@ -1,0 +1,72 @@
+const { encrypt, checkEmailExists } = require("../helper/General");
+
+module.exports = (dbConnection, { Schema }) => {
+  let { ObjectId } = Schema;
+
+  let UserSchema = new Schema({
+    author: {
+      type: ObjectId,
+    },
+    first_name: {
+        type: String,
+        required: false,
+        get: function(value) {
+        return value + this.last_name;
+        },
+    },
+    last_name: {
+      type: String,
+      required: false,
+    },
+    email: {
+      type: String,
+      required: false,
+    },
+    password: {
+      type: String,
+      required: false,
+      set: (value) => {
+        return encrypt(value);
+      },
+    },
+    email_verified: {
+      type: Boolean,
+      required: false,
+    },
+    otp: {
+      type: Number,
+      required: false,
+    },
+    token: {
+      type: String,
+      required: false,
+    },
+    token_expiry_at: {
+      type: Date,
+      required: false,
+    },
+    about_me: {
+      type: String,
+      required: false,
+    },
+    created_at: {
+      type: Date,
+      required: false,
+    },
+    updated_at: {
+      type: Date,
+      required: false,
+    },
+    status: {
+      type: Number,
+      default: 1,
+    },
+    cat_id:{
+      type: ObjectId,
+      required: false,
+      ref: "user_category",
+    }
+  });
+  let user = dbConnection.model("user", UserSchema);
+  return user;
+};
