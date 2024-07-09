@@ -33,11 +33,23 @@ module.exports = (dbConnection, { Schema }) => {
       type: Boolean,
       required: false,
     },
+    email_verified_at: {
+      type: Date,
+      required: false,
+    },
+    last_login_at: {
+      type: Date,
+      required: false,
+    },
     otp: {
       type: Number,
       required: false,
     },
     token: {
+      type: String,
+      required: false,
+    },
+    login_token: {
       type: String,
       required: false,
     },
