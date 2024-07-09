@@ -1,9 +1,52 @@
 const Validator = require('validatorjs');
 var md5 = require('md5');
 var moment = require('moment');
+const nodemailer = require('nodemailer');
+
+const sendMail = (to, subject, body) => {
+    
+    let transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        auth: {
+            user: 	"globiznotification@gmail.com",
+            pass: "mmcxulnkhaxcngqo"
+        }
+    });
+    
+    transporter.sendMail({
+        from: 	"globiznotification@gmail.com",
+        to: to,
+        subject: subject,
+        html: body
+    }).then(result => {
+        return true;
+    }).catch(err => {
+        console.log(err);
+        return false;
+    });
+}
 
 const validatorMake = async (data, rules, message) => {    
     let validation = new Validator(data, rules, message);
+    let userModel = require('../models/frontend/User')
+
+    Validator.registerAsync('exist', async function(value, attr, req, passes){
+        console.log(attr,"attr")
+        let check = await userModel.getRow(
+            {
+                email:value
+            }   
+        )
+        if(check)
+        {
+            passes(false," email exists");
+        }
+        else
+        {
+            passes();
+        }
+    })
 
     return validation;    
 }
@@ -75,16 +118,23 @@ const _date = (timestamp = null) => {
     }
 }
 
-const _datetime = (timestamp = null) => {
+const _datetime = (timestamp = null, addTime = null) => {
     if(timestamp)
     {
         return moment(timestamp)
             .utcOffset("+05:30")
             .format("YYYY-MM-DD HH:mm:ss");
-    }        
+    } 
     else
     {
-        return moment().utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
+        if(addTime)
+        {
+            return moment().add(addTime,'minutes').utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
+        }
+        else
+        {
+            return moment().utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
+        }
     }
 }
 
@@ -121,4 +171,5 @@ module.exports = {
     _date,
     getRandomNumber,
     isJSON,
+    sendMail
 }
