@@ -5,8 +5,8 @@ const { populate } = require("dotenv"); // Importing the populate function from 
 
 const index = async (req, res) => {
     let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
-    let where       = {};
-    
+    let where = {};
+        
     if(search)
     {
         search = new RegExp(search,'i') // Creating a case-insensitive regular expression for search

@@ -1,5 +1,5 @@
 const userModel  =  require("../../models/frontend/User")
-const { validatorMake }  = require('../../helper/General')
+const { validatorMake, getRandomNumber, getHash, _datetime, sendMail, encrypt }  = require('../../helper/General')
 
 const index = async (req, res) => {
     let { search, status, from_date, end_date }  = req.query
@@ -134,7 +134,7 @@ const detail = async (req, res) => {
         });
     }
 };
-
+ 
 const add = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
@@ -281,4 +281,255 @@ const deleteRow = async (req, res) => {
     }
 };
 
-module.exports = { add, detail, index, update, updateStatus, deleteRow };
+const signup =  async(req, res) => {
+    let data = req.body;
+    let validatorRules = await validatorMake(
+        data,
+        {
+            "first_name": "required",
+            "last_name": "required",
+            "email": "required|exist",
+            "password": "required|confirmed",
+            "password_confirmation": "required"
+        }
+    );
+
+    let passes = async () => {
+        data.email_verified = null;
+        data.otp = getRandomNumber();
+        data.token = getHash(64);
+        data.token_expiry_at = _datetime(null,30);
+
+        let resp = await userModel.insert(data);
+        if(resp)
+        {
+            sendMail(data.email,"One Time Password", `<h1>${data.otp}</h1>`)
+            res.send({
+                'status':true,
+                'message':'Record Saved Successfully',
+                'data':resp
+            })
+        }
+        else
+        {
+            res.send({
+                'status':true,
+                'message':'Something went wrong',
+                'data':[]
+            })
+        }
+    }
+
+    let fails = () => {
+        res.send({
+            'status':false,
+            'message':validatorRules.errors
+        });
+    }
+
+    validatorRules.checkAsync(passes,fails)
+}
+
+const resendOtp =  async(req, res) => {
+    let data = req.body;
+    let validatorRules = await validatorMake(
+        data,
+        {
+            "token": "required"
+        }
+    );
+    if(!validatorRules.fails())
+    {
+        let resp = await userModel.getRow({
+            token:data.token
+        });
+        if(resp)
+        {
+            if(!resp.otp)
+            {
+
+            }
+
+            sendMail(resp.email,"One Time Password", `<h1>${resp.otp}</h1>`)
+            res.send({
+                'status':true,
+                'message':'Record Saved Successfully',
+                'data':resp
+            })
+        }
+        else
+        {
+            res.send({
+                'status':true,
+                'message':'Something went wrong',
+                'data':[]
+            })
+        }    
+    }
+    else
+    {
+        res.send({
+            'status':false,
+            'message':validatorRules.errors
+        });
+    }
+}
+
+const verifyOtp =  async(req, res) => {
+    let data = req.body;
+    let validatorRules = await validatorMake(
+        data,
+        {
+            "token": "required",
+            "otp": "required",
+        }
+    );
+    if(!validatorRules.fails())
+    {
+        let resp = await userModel.getRow({
+            token:data.token
+        });
+
+        if(resp)
+        {
+            if(resp.otp == data.otp)
+            {
+                let update = {
+                    email_verified:1,
+                    email_verified_at:_datetime(),
+                    otp:null,
+                    token:null
+                }
+                let userUpdate = await userModel.update(resp._id,update);
+                if(userUpdate)
+                {
+                    sendMail(resp.email,"verification complete", `<h1>verification complete</h1>`)
+                    res.send({
+                        'status':true,
+                        'message':'Record Saved Successfully',
+                        'data':userUpdate
+                    })
+                }
+                else
+                {
+                    res.send({
+                        'status':false,
+                        'message':'Something went wrong',
+                        'data':[]
+                    })
+                }
+            }
+            else
+            {
+                res.send({
+                    'status':false,
+                    'message':'OTP missmatch',
+                    'data':[]
+                })
+            }
+        }
+        else
+        {
+            res.send({
+                'status':true,
+                'message':'Something went wrong',
+                'data':[]
+            })
+        }    
+    }
+    else
+    {
+        res.send({
+            'status':false,
+            'message':validatorRules.errors
+        });
+    }
+}
+
+const login =  async(req, res) => {
+    let data = req.body;
+    let validatorRules = await validatorMake(
+        data,
+        {
+            "email": "required",
+            "password": "required",
+        }
+    );
+    if(!validatorRules.fails())
+    {
+        let resp = await userModel.getRow({
+            email:data.email
+        });
+
+        if(resp)
+        {
+            if(resp.email_verified)
+            {
+                if(resp.password == encrypt(data.password))
+                {
+                    let update = {
+                        token:null,
+                        login_token:getHash(64),
+                        last_login_at:_datetime()
+                    }
+                    let userUpdate = await userModel.update(resp._id,update);
+                    if(userUpdate)
+                    {
+                        res.send({
+                            'status':true,
+                            'message':'Login Saved Successfully',
+                            'data':userUpdate
+                        })
+                    }
+                    else
+                    {
+                        res.send({
+                            'status':false,
+                            'message':'Something went wrong',
+                            'data':[]
+                        })
+                    }
+                }
+                else
+                {
+                    res.send({
+                        'status':false,
+                        'message':'user not found',
+                        'data':[]
+                    })
+                }
+            }
+            else
+            {
+                if(!resp.otp)
+                {
+    
+                }
+    
+                sendMail(resp.email,"One Time Password", `<h1>${resp.otp}</h1>`)
+                res.send({
+                    status:true,
+                    message:"Please verified you email",
+                    data:resp
+                })
+            }
+        }
+        else
+        {
+            res.send({
+                'status':true,
+                'message':'user not found',
+                'data':[]
+            })
+        }    
+    }
+    else
+    {
+        res.send({
+            'status':false,
+            'message':validatorRules.errors
+        });
+    }
+}
+
+module.exports = { add, detail, index, update, updateStatus, deleteRow, signup, resendOtp, verifyOtp, login };
