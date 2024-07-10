@@ -107,8 +107,19 @@ const detail = async (req, res) => {
         'created_at',
         'updated_at',
     ];
+    let joins = [
+        {
+            path:'user_id',
+        },
+        {
+            path:'post_id',
+        },
+        {
+            path:'cat_id',
+        }
+    ]
 
-    let data = await postVoteModel.getById(id, select); // Fetching data from the postVoteModel
+    let data = await postVoteModel.getById(id, select,joins); // Fetching data from the postVoteModel
     
     if(data)
     {

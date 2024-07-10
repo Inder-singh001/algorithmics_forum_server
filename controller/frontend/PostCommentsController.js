@@ -108,7 +108,19 @@ const detail = async (req, res) => {
         'created_at'
     ];
 
-    let data = await postCommentsModel.getById(id, select); // Fetching the post details by ID
+    let joins = [
+        {
+            path:'post_id',
+        },
+        {
+            path:'user_id',
+        },
+        {
+            path:'parent_id',
+        },
+    ]
+
+    let data = await postCommentsModel.getById(id, select,joins); // Fetching the post details by ID
     
     if(data)
     {

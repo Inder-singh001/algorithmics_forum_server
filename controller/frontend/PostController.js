@@ -108,8 +108,16 @@ const detail = async (req, res) => {
         'created_at',
         'cat_id'
     ];
+    let joins = [
+        {
+            path:'cat_id',
+            select:{
+                'created_at':0 // Excluding the created_at field from the cat_id join
+            }
+        }
+    ]
 
-    let data = await postModel.getById(id, select); // Fetching the post details by ID
+    let data = await postModel.getById(id, select,joins); // Fetching the post details by ID
     
     if(data)
     {

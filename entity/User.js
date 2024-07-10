@@ -1,4 +1,4 @@
-const { encrypt } = require("../helper/General");
+const { encrypt, checkEmailExists } = require("../helper/General");
 
 module.exports = (dbConnection, { Schema }) => {
   let { ObjectId } = Schema;
@@ -73,6 +73,11 @@ module.exports = (dbConnection, { Schema }) => {
       type: Number,
       default: 1,
     },
+    cat_id:{
+      type: ObjectId,
+      required: false,
+      ref: "user_category",
+    }
   });
   let user = dbConnection.model("user", UserSchema);
   return user;
