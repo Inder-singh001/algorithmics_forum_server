@@ -119,7 +119,7 @@ const detail = async (req, res) => {
         });
     }
 };
-
+ 
 const add = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
