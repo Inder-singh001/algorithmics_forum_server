@@ -4,18 +4,18 @@ var moment = require('moment');
 const nodemailer = require('nodemailer');
 
 const sendMail = (to, subject, body) => {
-    
+
     let transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
         auth: {
-            user: 	"globiznotification@gmail.com",
+            user: "globiznotification@gmail.com",
             pass: "mmcxulnkhaxcngqo"
         }
     });
-    
+
     transporter.sendMail({
-        from: 	"globiznotification@gmail.com",
+        from: "globiznotification@gmail.com",
         to: to,
         subject: subject,
         html: body
@@ -27,28 +27,26 @@ const sendMail = (to, subject, body) => {
     });
 }
 
-const validatorMake = async (data, rules, message) => {    
+const validatorMake = async (data, rules, message) => {
     let validation = new Validator(data, rules, message);
     let userModel = require('../models/frontend/User')
 
-    Validator.registerAsync('exist', async function(value, attr, req, passes){
-        console.log(attr,"attr")
+    Validator.registerAsync('exist', async function (value, attr, req, passes) {
+
         let check = await userModel.getRow(
             {
-                email:value
-            }   
+                email: value
+            }
         )
-        if(check)
-        {
-            passes(false," email exists");
+        if (check) {
+            passes(false, " email exists");
         }
-        else
-        {
+        else {
             passes();
         }
     })
 
-    return validation;    
+    return validation;
 }
 
 const encrypt = (string) => {
@@ -60,8 +58,7 @@ const getHash = (length = 32) => {
     var characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     var charactersLength = characters.length;
-    for(var i = 0; i < length; i++)
-    {
+    for (var i = 0; i < length; i++) {
         result += characters.charAt(
             Math.floor(Math.random() * charactersLength)
         );
@@ -75,8 +72,7 @@ const _moment = (timestamp = null) => {
 }
 
 const foreach = (obj, callback) => {
-    for (let [key, value] of Object.entries(obj))
-    {
+    for (let [key, value] of Object.entries(obj)) {
         callback(key, value);
     }
     return true;
@@ -88,51 +84,41 @@ const getBearerToken = (req) => {
         req.headers &&
         req.headers.authorization &&
         req.headers.authorization.split(" ")[0] === "Bearer"
-    )
-    {
+    ) {
         let token = req.headers.authorization.split(" ");
-        
-        if(token && token.length > 1)
-        {
+
+        if (token && token.length > 1) {
             return token && token[1] ? token[1].trim() : '';
         }
-        else
-        {
+        else {
             return null;
         }
     }
-    else
-    {           
+    else {
         return null;
-    } 
+    }
 }
 
 const _date = (timestamp = null) => {
-    if(timestamp)
-    {
+    if (timestamp) {
         return moment(timestamp).utcOffset("+05:30").format("YYYY-MM-DD");
     }
-    else
-    {
+    else {
         return moment().utcOffset("+05:30").format("YYYY-MM-DD");
     }
 }
 
 const _datetime = (timestamp = null, addTime = null) => {
-    if(timestamp)
-    {
+    if (timestamp) {
         return moment(timestamp)
             .utcOffset("+05:30")
             .format("YYYY-MM-DD HH:mm:ss");
-    } 
-    else
-    {
-        if(addTime)
-        {
-            return moment().add(addTime,'minutes').utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
+    }
+    else {
+        if (addTime) {
+            return moment().add(addTime, 'minutes').utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
         }
-        else
-        {
+        else {
             return moment().utcOffset("+05:30").format("YYYY-MM-DD HH:mm:ss");
         }
     }
@@ -142,13 +128,12 @@ const getRandomNumber = (length = 6) => {
     var result = "";
     var characters = "0123456789";
     var charactersLength = characters.length;
-    for(var i = 0; i < length; i++)
-    {
+    for (var i = 0; i < length; i++) {
         result += characters.charAt(
             Math.floor(Math.random() * charactersLength)
         );
     }
-    
+
     return result;
 }
 
@@ -171,5 +156,5 @@ module.exports = {
     _date,
     getRandomNumber,
     isJSON,
-    sendMai
+    sendMail
 }

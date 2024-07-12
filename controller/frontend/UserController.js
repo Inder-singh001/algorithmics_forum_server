@@ -1,57 +1,52 @@
-const userModel  =  require("../../models/frontend/User")
-const { validatorMake, getRandomNumber, getHash, _datetime, sendMail, encrypt }  = require('../../helper/General')
+const userModel = require("../../models/frontend/User")
+const { validatorMake, getRandomNumber, getHash, _datetime, sendMail, encrypt } = require('../../helper/General')
 
 const index = async (req, res) => {
-    let { search, status, from_date, end_date }  = req.query
-    let where       = {};
-    
-    if(search)
-    {
-        search = new RegExp(search,'i')
+    let { search, status, from_date, end_date } = req.query
+    let where = {};
+
+    if (search) {
+        search = new RegExp(search, 'i')
         where = {
-            $or:[
+            $or: [
                 {
-                    "first_name":search
+                    "first_name": search
                 }
             ]
         }
     }
 
-    if(status >= 0)
-    {
+    if (status >= 0) {
         where = {
             ...where,
-            'status':status
-        }  
+            'status': status
+        }
     }
 
-    if(end_date && from_date)
-    {
+    if (end_date && from_date) {
         where = {
             ...where,
-            'created_at':{
-                $gte:new Date(from_date),
-                $lte:new Date(end_date+" 23:59:59")
+            'created_at': {
+                $gte: new Date(from_date),
+                $lte: new Date(end_date + " 23:59:59")
             }
-        } 
+        }
     }
-    else if(end_date)
-    {
+    else if (end_date) {
         where = {
             ...where,
-            'created_at':{
-                $lte:new Date(end_date+" 23:59:59")
+            'created_at': {
+                $lte: new Date(end_date + " 23:59:59")
             }
-        } 
+        }
     }
-    else if(from_date)
-    {
+    else if (from_date) {
         where = {
             ...where,
-            'created_at':{
-                $gte:new Date(from_date),
+            'created_at': {
+                $gte: new Date(from_date),
             }
-        } 
+        }
     }
 
     let select = [
@@ -61,42 +56,42 @@ const index = async (req, res) => {
         'about_me',
         'created_at',
         'status',
+        'token',
+        'otp',
         'cat_id'
     ];
 
     let joins = [
         {
-            path:'cat_id',
-            select:{
-                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            path: 'cat_id',
+            select: {
+                'updated_at': 0 // Excluding the updated_at field from the cat_id join
             }
         }
     ]
 
-    let data = await userModel.getListing(req, select, where, joins);    
-    if(data)
-    {
+    let data = await userModel.getListing(req, select, where, joins);
+    if (data) {
         let count = await userModel.getCounts(where)
         res.send({
-            'status':true,
-            'message':'Data Fetch Successfully',
-            'total' : count,
-            'data':data
+            'status': true,
+            'message': 'Data Fetch Successfully',
+            'total': count,
+            'data': data
         })
     }
-    else
-    {
+    else {
         res.send({
-            'status':true,
-            'message':'Something went wrong',
-            'data':[]
+            'status': true,
+            'message': 'Something went wrong',
+            'data': []
         })
     }
 };
 
 const detail = async (req, res) => {
-    let {id} = req.params;
-    
+    let { id } = req.params;
+
     let select = [
         'first_name',
         'last_name',
@@ -104,37 +99,37 @@ const detail = async (req, res) => {
         'about_me',
         'created_at',
         'status',
-        'author'
+        'author',
+        'token',
+        'otp'
     ];
     let joins = [
         {
-            path:'author',
-            select:{
-                'updated_at':0 // Excluding the updated_at field from the cat_id join
+            path: 'author',
+            select: {
+                'updated_at': 0 // Excluding the updated_at field from the cat_id join
             }
         }
     ]
 
-    let data = await userModel.getById(id, select,joins);
-    
-    if(data)
-    {
+    let data = await userModel.getById(id, select, joins);
+
+    if (data) {
         res.send({
-            'status':true,
-            'message':'Data Fetch Successfully',
-            'data':data
+            'status': true,
+            'message': 'Data Fetch Successfully',
+            'data': data
         });
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':'Something went wrong',
-            'data':[]
+            'status': false,
+            'message': 'Something went wrong',
+            'data': []
         });
     }
 };
- 
+
 const add = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
@@ -148,37 +143,33 @@ const add = async (req, res) => {
         }
     );
 
-    if(!validatorRules.fails())
-    {
+    if (!validatorRules.fails()) {
         let resp = await userModel.insert(data);
-        if(resp)
-        {
+        if (resp) {
             res.send({
-                'status':true,
-                'message':'Record Saved Successfully',
-                'data':resp
+                'status': true,
+                'message': 'Record Saved Successfully',
+                'data': resp
             })
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': true,
+                'message': 'Something went wrong',
+                'data': []
             })
         }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 };
 
 const update = async (req, res) => {
-    let {id} = req.params;
+    let { id } = req.params;
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -190,37 +181,33 @@ const update = async (req, res) => {
         }
     );
 
-    if(!validatorRules.fails())
-    {
-        let resp = await userModel.update(id,data);
-        if(resp)
-        {
+    if (!validatorRules.fails()) {
+        let resp = await userModel.update(id, data);
+        if (resp) {
             res.send({
-                'status':true,
-                'message':'Record Updated Successfully',
-                'data':resp
+                'status': true,
+                'message': 'Record Updated Successfully',
+                'data': resp
             })
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': true,
+                'message': 'Something went wrong',
+                'data': []
             })
         }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 };
 
 const updateStatus = async (req, res) => {
-    let {id} = req.params;
+    let { id } = req.params;
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -229,59 +216,53 @@ const updateStatus = async (req, res) => {
         }
     );
 
-    if(!validatorRules.fails())
-    {
-        let resp = await userModel.update(id,data);
-        if(resp)
-        {
+    if (!validatorRules.fails()) {
+        let resp = await userModel.update(id, data);
+        if (resp) {
             res.send({
-                'status':true,
-                'message':'Record Updated Successfully',
-                'data':resp
+                'status': true,
+                'message': 'Record Updated Successfully',
+                'data': resp
             })
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': true,
+                'message': 'Something went wrong',
+                'data': []
             })
         }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 };
 
 const deleteRow = async (req, res) => {
-    let {id} = req.params;
-    
+    let { id } = req.params;
+
     let resp = await userModel.remove(id);
-    
-    if(resp)
-    {
+
+    if (resp) {
         res.send({
-            'status':true,
-            'message':'Record Deleted Successfully',
-            'data':resp,
+            'status': true,
+            'message': 'Record Deleted Successfully',
+            'data': resp,
         })
     }
-    else
-    {
+    else {
         res.send({
-            'status':true,
-            'message':'Something went wrong',
-            'data':[]
+            'status': true,
+            'message': 'Something went wrong',
+            'data': []
         })
     }
 };
 
-const signup =  async(req, res) => {
+const signup = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -298,39 +279,37 @@ const signup =  async(req, res) => {
         data.email_verified = null;
         data.otp = getRandomNumber();
         data.token = getHash(64);
-        data.token_expiry_at = _datetime(null,30);
+        data.token_expiry_at = _datetime(null, 30);
 
         let resp = await userModel.insert(data);
-        if(resp)
-        {
-            sendMail(data.email,"One Time Password", `<h1>${data.otp}</h1>`)
+        if (resp) {
+            sendMail(data.email, "One Time Password", `<h1>${data.otp}</h1>`)
             res.send({
-                'status':true,
-                'message':'Record Saved Successfully',
-                'data':resp
+                'status': true,
+                'message': 'Registration Successful',
+                'data': resp
             })
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': false,
+                'message': 'Registration Failed, Try again',
+                'data': []
             })
         }
     }
 
     let fails = () => {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 
-    validatorRules.checkAsync(passes,fails)
+    validatorRules.checkAsync(passes, fails)
 }
 
-const resendOtp =  async(req, res) => {
+const resendOtp = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -338,44 +317,39 @@ const resendOtp =  async(req, res) => {
             "token": "required"
         }
     );
-    if(!validatorRules.fails())
-    {
+    if (!validatorRules.fails()) {
         let resp = await userModel.getRow({
-            token:data.token
+            token: data.token
         });
-        if(resp)
-        {
-            if(!resp.otp)
-            {
-
+        if (resp) {
+            if (!resp.otp) {
+                //generate new otp
             }
 
-            sendMail(resp.email,"One Time Password", `<h1>${resp.otp}</h1>`)
+            sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`)
             res.send({
-                'status':true,
-                'message':'Record Saved Successfully',
-                'data':resp
+                'status': true,
+                'message': 'OTP Sent to your registered email',
+                'data': resp
             })
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': false,
+                'message': 'Register again!',
+                'data': []
             })
-        }    
+        }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 }
 
-const verifyOtp =  async(req, res) => {
+const verifyOtp = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -384,69 +358,61 @@ const verifyOtp =  async(req, res) => {
             "otp": "required",
         }
     );
-    if(!validatorRules.fails())
-    {
+    if (!validatorRules.fails()) {
         let resp = await userModel.getRow({
-            token:data.token
+            token: data.token
         });
-
-        if(resp)
-        {
-            if(resp.otp == data.otp)
-            {
+        if (resp) {
+            if (resp.otp == data.otp) {
                 let update = {
-                    email_verified:1,
-                    email_verified_at:_datetime(),
-                    otp:null,
-                    token:null
+                    email_verified: 1,
+                    email_verified_at: _datetime(),
+                    otp: null,
+                    token: null
                 }
-                let userUpdate = await userModel.update(resp._id,update);
-                if(userUpdate)
-                {
-                    sendMail(resp.email,"verification complete", `<h1>verification complete</h1>`)
+                let userUpdate = await userModel.update(resp._id, update);
+                if (userUpdate) {
+                    sendMail(resp.email, "verification complete", `<h1>verification complete</h1>`)
                     res.send({
-                        'status':true,
-                        'message':'Record Saved Successfully',
-                        'data':userUpdate
+                        'status': true,
+                        'message': 'Verified Successfully!',
+                        'data': userUpdate
                     })
                 }
-                else
-                {
+                else {
                     res.send({
-                        'status':false,
-                        'message':'Something went wrong',
-                        'data':[]
+                        'status': false,
+                        'message': 'Verification Failed!',
+                        'data': []
                     })
                 }
             }
-            else
-            {
+            else {
                 res.send({
-                    'status':false,
-                    'message':'OTP missmatch',
-                    'data':[]
+                    'status': false,
+                    'message': 'OTP Mis-match. Check your OTP and try again!',
+                    'data': []
                 })
             }
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
+                'status': false,
+                'message': 'Register Again!',
+                'data': []
             })
-        }    
+            // console.log("wrong token")
+        }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 }
 
-const login =  async(req, res) => {
+const login = async (req, res) => {
     let data = req.body;
     let validatorRules = await validatorMake(
         data,
@@ -455,79 +421,68 @@ const login =  async(req, res) => {
             "password": "required",
         }
     );
-    if(!validatorRules.fails())
-    {
+    if (!validatorRules.fails()) {
         let resp = await userModel.getRow({
-            email:data.email
+            email: data.email
         });
 
-        if(resp)
-        {
-            if(resp.email_verified)
-            {
-                if(resp.password == encrypt(data.password))
-                {
+        if (resp) {
+            if (resp.email_verified) {
+                if (resp.password == encrypt(data.password)) {
                     let update = {
-                        token:null,
-                        login_token:getHash(64),
-                        last_login_at:_datetime()
+                        token: null,
+                        login_token: getHash(64),
+                        last_login_at: _datetime()
                     }
-                    let userUpdate = await userModel.update(resp._id,update);
-                    if(userUpdate)
-                    {
+                    let userUpdate = await userModel.update(resp._id, update);
+                    if (userUpdate) {
                         res.send({
-                            'status':true,
-                            'message':'Login Saved Successfully',
-                            'data':userUpdate
+                            'status': true,
+                            'message': 'Login Successfully!',
+                            'data': userUpdate
                         })
                     }
-                    else
-                    {
+                    else {
                         res.send({
-                            'status':false,
-                            'message':'Something went wrong',
-                            'data':[]
+                            'status': false,
+                            'message': 'Login Failed, Try Again!',
+                            'data': []
                         })
                     }
                 }
-                else
-                {
+                else {
                     res.send({
-                        'status':false,
-                        'message':'user not found',
-                        'data':[]
+                        'status': false,
+                        'message': 'Wrong Password!',
+                        'data': []
                     })
                 }
             }
-            else
-            {
-                if(!resp.otp)
-                {
-    
+            else {
+                if (!resp.otp) {
+                    //redirect to otp page and resend otp
                 }
-    
-                sendMail(resp.email,"One Time Password", `<h1>${resp.otp}</h1>`)
+
+                sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`)
                 res.send({
-                    status:true,
-                    message:"Please verified you email",
-                    data:resp
+                    status: true,
+                    message: "Please verified you email",
+                    data: resp
                 })
             }
         }
-        else
-        {
+        else {
             res.send({
-                'status':true,
-                'message':'user not found',
-                'data':[]
+                'status': true,
+                'message': 'user not found',
+                'data': []
             })
-        }    
+        }
     }
-    else
-    {
+    else {
         res.send({
-            'status':false,
-            'message':validatorRules.errors
+            'status': false,
+            'message': validatorRules.errors
         });
     }
 }

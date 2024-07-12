@@ -113,7 +113,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
         
         direction = direction && direction == 'asc' ? 1 : -1;
         sortField = sort ? sort : 'created_at';
-        limit     = limit ? parseInt(limit) : 10;
+        limit     = limit ? parseInt(limit) : '';
         offset    = page > 1 ? ((page-1)*limit) : 0;
         orderBy   = { [sortField]:direction }
     
