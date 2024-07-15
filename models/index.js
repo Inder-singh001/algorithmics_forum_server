@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const {
-    URI,
+    DOMAIN,
     NAME,
     PASSWORD,
     HOST,
@@ -10,7 +10,8 @@ const {
 } = process.env;
 
 // const connectionString = 'mongodb://localhost:27017/new';
-const connectionString = `${URI}${NAME}:${PASSWORD}@${HOST}/${DATABASE_NAME}`;
+const connectionString = `${DOMAIN}${NAME}:${PASSWORD}@${HOST}/${DATABASE_NAME}`;
+
 try
 {
     var dbConnection = mongoose.createConnection(connectionString)

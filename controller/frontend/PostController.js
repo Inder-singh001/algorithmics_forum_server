@@ -1,9 +1,12 @@
 const postModel  =  require("../../models/frontend/Post") // Importing the Post model
+const userModel  =  require("../../models/frontend/User") 
 const { postCategory } = require('../../models/index') // Importing the postCategory model
-const { validatorMake }  = require('../../helper/General'); // Importing the validatorMake function
+const { validatorMake, getBearerToken }  = require('../../helper/General'); // Importing the validatorMake function
 const { populate } = require("dotenv"); // Importing the populate function from dotenv
 
 const index = async (req, res) => {
+    let token = await userModel.getLoginUser(req);
+    // console.log(token,"token")
     let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
     let where = {};
         
@@ -138,45 +141,45 @@ const detail = async (req, res) => {
 };
 
 const add = async (req, res) => {
-    let data = req.body; // Getting the post data from the request body
-    let validatorRules = await validatorMake(
-        data,
-        {
-            "title": "required",
-            "description":"required",
-            "type":"required" ,
-            "cat_id":"required" // Validating that the title field is required
+    try {
+      const data = req.body; // Getting the post data from the request body
+      const validatorRules = await validatorMake(data, {
+        title: "required",
+        description: "required",
+        type: "required",
+      });
+  
+      if (!validatorRules.fails()) {
+        const resp = await postModel.insert(data); // Inserting the post data into the database
+        if (resp) {
+          res.status(200).send({
+            status: true,
+            message: "Record Saved Successfully",
+            data: resp,
+          });
+        } else {
+          res.status(500).send({
+            status: false,
+            message: "Something went wrong",
+            data: [],
+          });
         }
-    );
-
-    if(!validatorRules.fails())
-    {
-        let resp = await postModel.insert(data); // Inserting the post data into the database
-        if(resp)
-        {
-            res.send({
-                'status':true,
-                'message':'Record Saved Successfully',
-                'data':resp
-            })
-        }
-        else
-        {
-            res.send({
-                'status':true,
-                'message':'Something went wrong',
-                'data':[]
-            })
-        }
-    }
-    else
-    {
-        res.send({
-            'status':false,
-            'message':validatorRules.errors // Sending validation errors if any
+      } else {
+        res.status(400).send({
+          status: false,
+          message: "Validation failed",
+          errors: validatorRules.errors.errors, // Sending validation errors if any
         });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({
+        status: false,
+        message: "An unexpected error occurred",
+      });
     }
-};
+  };
+  
 
 const update = async (req, res) => {
     let {id} = req.params; // Getting the post ID from the request parameters

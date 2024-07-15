@@ -9,9 +9,13 @@ userRouter.post('/user/update/:id',UserController.update);
 userRouter.post('/user/update-status/:id',UserController.updateStatus);
 userRouter.get('/user/delete/:id',UserController.deleteRow);
 
+userRouter.get('/user/profile',UserController.profile);
 userRouter.post('/user/sign-up',UserController.signup);
 userRouter.post('/user/resend-otp',UserController.resendOtp);
 userRouter.post('/user/verify-otp',UserController.verifyOtp);
 userRouter.post('/user/login',UserController.login);
+userRouter.post('/user/change-password',UserController.changePassword);
+userRouter.post('/user/reset-password',UserController.resetPassword);
+
 
 module.exports =  userRouter;

@@ -1,5 +1,5 @@
 const { user }   = require('../index');
-const { foreach } = require('../../helper/General');
+const { foreach, getBearerToken } = require('../../helper/General');
 
 // Function to insert a new user record
 const insert = async (data) => {    
@@ -113,7 +113,7 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
         
         direction = direction && direction == 'asc' ? 1 : -1;
         sortField = sort ? sort : 'created_at';
-        limit     = limit ? parseInt(limit) : 10;
+        limit     = limit ? parseInt(limit) : '';
         offset    = page > 1 ? ((page-1)*limit) : 0;
         orderBy   = { [sortField]:direction }
     
@@ -165,6 +165,54 @@ const remove = async (id) => {
     }
 }
 
+const getLoginUser = async (req) => {
+    try
+    {   
+        let token = await getBearerToken(req);
+        if(token)
+        {
+            let record = await getRow({
+                login_token:token
+            });
+           
+            return record;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    catch(error)
+    {
+        console.log(error)
+        return false;
+    }
+}
+
+const getLoginUserId = async (req) => {
+    try
+    {   
+        let token = await getBearerToken(req);
+        if(token)
+        {
+            let record = await getRow({
+                login_token:token
+            },['_id']);
+           
+            return record;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    catch(error)
+    {
+        console.log(error)
+        return false;
+    }
+}
+
 module.exports = { 
     insert, // Insert a new user record
     update, // Update a user record
@@ -173,5 +221,7 @@ module.exports = {
     getAll, // Get all user records
     getListing, // Get a paginated listing of user records
     getCounts, // Get the count of user records based on a condition
-    remove // Remove a user record
+    remove, // Remove a user record
+    getLoginUser,
+    getLoginUserId
 };
