@@ -137,6 +137,17 @@ const getRandomNumber = (length = 6) => {
     return result;
 }
 
+// Function to generate a random password
+const generatePassword = (length = 8) =>{ // Length of the password
+        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", // Characters to include in the password
+        retVal = ""; // Variable to store the generated password
+    for (var i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n)); // Randomly select a character from the charset and add it to the password
+    }
+    return retVal; // Return the generated password
+}
+
+
 const isJSON = (str) => {
     try {
         JSON.parse(str);
@@ -156,5 +167,6 @@ module.exports = {
     _date,
     getRandomNumber,
     isJSON,
-    sendMail
+    sendMail,
+    generatePassword
 }
