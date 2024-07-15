@@ -466,7 +466,7 @@ const login = async (req, res) => {
                 sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`)
                 res.send({
                     status: true,
-                    message: "Please verified you email",
+                    message: "Please verify you email",
                     data: resp
                 })
             }
