@@ -159,6 +159,34 @@ const remove = async (id) => {
     }
 }
 
+// const getFollower = async (id) => {
+//     try
+//     {   
+
+//         let count = await userFriends.aggregate([
+//             {
+//                 $project:{
+//                     'created_at':0
+//                 }
+//             },
+//             {
+//                 $match:{
+//                     user_id:id
+//                 }
+//             }
+            
+//         ]).exec();
+//         console.log(count)
+//         return count
+//     }
+//     catch(error)
+//     {
+//         console.log(error)
+//         return false;
+//     }
+// }
+
+
 module.exports = { 
     insert,
     update,

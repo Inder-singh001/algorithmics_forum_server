@@ -165,7 +165,7 @@ const add = async (req, res) => {
         {
             res.send({
                 'status':true,
-                'message':'Record Saved Successfully',
+                'message':'Loading feed based on your interests.',
                 'data':resp
             })
         }
@@ -173,7 +173,7 @@ const add = async (req, res) => {
         {
             res.send({
                 'status':true,
-                'message':'Something went wrong',
+                'message':'Network error!',
                 'data':[]
             })
         }
