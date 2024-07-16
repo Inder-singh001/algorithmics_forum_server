@@ -1,51 +1,56 @@
 
-module.exports = (dbConnection, {Schema}) => {
+module.exports = (dbConnection, { Schema }) => {
     let { ObjectId } = Schema;
 
     let PostSchema = new Schema({
         author: {
-            type:ObjectId
+            type: ObjectId
         },
-        title: {
-            type:String,
+        user_id: {
+            type: ObjectId,
+            ref: 'user',
             required:true
         },
+        title: {
+            type: String,
+            required: true
+        },
         description: {
-            type:String,
-            required:false
+            type: String,
+            required: false
         },
         file: {
-            type:String, //"/uploads/jsbgsghsreg.pdf"
-            required:false
+            type: String, //"/uploads/jsbgsghsreg.pdf"
+            required: false
         },
-        status:  {
-            type:Number,
-            default:1
+        status: {
+            type: Number,
+            default: 1
         },
-        type:{
-            type:String,
-            default:"Public"
+        type: {
+            type: String,
+            default: "Public"
         },
         share_count: {
-            type:Number,
-            required:false
+            type: Number,
+            required: false
         },
-        created_at:{
-            type:Date,
-            required:false,
+        created_at: {
+            type: Date,
+            required: false,
         },
-        updated_at:{
-            type:Date,
-            required:false,
+        updated_at: {
+            type: Date,
+            required: false,
         },
-        cat_id:{
-            type:ObjectId,
-            required:false,
-            ref:'post_category'
+        cat_id: {
+            type: ObjectId,
+            required: false,
+            ref: 'post_category'
         }
     });
 
-    let post = dbConnection.model('post',PostSchema);
-    
+    let post = dbConnection.model('post', PostSchema);
+
     return post;
 }

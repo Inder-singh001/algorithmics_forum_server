@@ -9,4 +9,6 @@ postRouter.post('/post/update/:id',PostController.update);
 postRouter.post('/post/update-status/:id',PostController.updateStatus);
 postRouter.get('/post/delete/:id',PostController.deleteRow);
 
+postRouter.get('/user/post',PostController.userPost);
+
 module.exports =  postRouter;
