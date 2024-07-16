@@ -213,6 +213,33 @@ const getLoginUserId = async (req) => {
     }
 }
 
+const getFollower = async (id) => {
+    try
+    {   
+
+        let count = await user.aggregate([
+            {
+                $project:{
+                    'status':0
+                }
+            },
+            {
+                $match:{
+                    _id:id
+                }
+            }
+            
+        ]).exec();
+        console.log(id)
+        return count
+    }
+    catch(error)
+    {
+        console.log(error)
+        return false;
+    }
+}
+
 module.exports = { 
     insert, // Insert a new user record
     update, // Update a user record
@@ -223,5 +250,6 @@ module.exports = {
     getCounts, // Get the count of user records based on a condition
     remove, // Remove a user record
     getLoginUser,
-    getLoginUserId
+    getLoginUserId,
+    getFollower
 };
