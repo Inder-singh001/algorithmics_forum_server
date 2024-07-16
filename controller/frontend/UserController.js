@@ -1,4 +1,5 @@
 const userModel = require("../../models/frontend/User");
+const userFriends = require("../../models/frontend/UserFriends");
 const {
 	validatorMake,
 	getRandomNumber,
@@ -304,15 +305,25 @@ const resendOtp = async (req, res) => {
 		});
 		if (resp) {
 			if (!resp.otp) {
-				//generate new otp
+				let update = {
+					otp: getRandomNumber(6)
+				};
+				let userUpdate = await userModel.update(resp._id, update);
+				sendMail(resp.email, "One Time Password", `<h1>${update.otp}</h1>`);
+				res.send({
+					status: true,
+					message: "Please verify your email",
+					data: resp,
+					type: 'NOT_VERIFIED'
+				});
+			} else {
+				sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
+				res.send({
+					status: true,
+					message: "OTP Sent to your registered email",
+					data: resp,
+				});
 			}
-
-			sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
-			res.send({
-				status: true,
-				message: "OTP Sent to your registered email",
-				data: resp,
-			});
 		} else {
 			res.send({
 				status: false,
@@ -443,7 +454,7 @@ const login = async (req, res) => {
 					update = {
 						opt: getRandomNumber(6)
 					};
-					let userUpdate = await userModel.update(resp._id, update);
+					let userUpdate = await userModel.update(resp._id, userUpdate);
 					//redirect to otp page and resend otp
 				}
 
@@ -657,12 +668,17 @@ const profile = async (req, res) => {
 	];
 
 	let data = await userModel.getById(id, select);
-
-	if (data) {
+	let followers = await userFriends.getCounts({friend_id:id})
+	let following = await userFriends.getCounts({user_id:id})
+	
+	if (data)
+	{
 		res.send({
 			status: true,
 			message: "Data Fetch Successfully",
 			data: data,
+			followers:followers,
+			following:following
 		});
 	} else {
 		res.send({
