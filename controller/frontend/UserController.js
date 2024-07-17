@@ -177,7 +177,6 @@ const update = async (req, res) => {
 		last_name: "required",
 		email: "required",
 		about_me: "required",
-		password: "required",
 	});
 
 	if (!validatorRules.fails()) {
@@ -641,24 +640,22 @@ const resetPassword = async (req, res) => {
 const editPassword = async (req, res) => {
 	let userId = await userModel.getLoginUserId(req)
 	let id = userId ? userId._id : null;
-	console.log(id)
+
 	try {
 		let data = req.body;
 		let validatorRules = await validatorMake(data, {
 			old_password: "required",
-			password: "required|confirmed",
-			password_confirmation: "required",
+			password: "required",
+			password_confirmation: "required|same:password",
 		})
 
 		if (!validatorRules.fails()) {
 
 			let resp = await userModel.getRow({ _id: id });
-			console.log(resp)
-			if (resp) {
-				console.log(resp.password)
-				console.log(encrypt(data.old_password.trim()))
 
-				if (resp.password === encrypt(data.old_password)) {
+			if (resp) {
+
+				if (resp.password === encrypt(data.old_password) && data.old_password != data.password) {
 					let update = { password: data.password };
 
 					let updateResp = await userModel.update(resp._id, update);
@@ -685,11 +682,20 @@ const editPassword = async (req, res) => {
 						});
 					}
 				} else {
-					// If the user row is not found based on the token, send an error response
-					return res.send({
-						status: false,
-						message: "wrong password",
-					});
+					if(resp.password != encrypt(data.old_password)){
+						return res.send({
+							status: false,
+							message: "wrong password",
+						});
+					}
+					else
+					{
+						return res.send({
+							status:false,
+							message:"New password cannot be the same as the old password"
+						})
+					}
+					
 				}
 			}
 			else {
