@@ -167,6 +167,8 @@ module.exports = {
     _date,
     getRandomNumber,
     isJSON,
+
     sendMail,
     generatePassword
+>>>>>>>>> Temporary merge branch 2
 }
