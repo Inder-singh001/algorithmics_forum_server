@@ -17,6 +17,6 @@ userRouter.post('/user/login',UserController.login);
 userRouter.post('/user/change-password',UserController.changePassword);
 userRouter.post('/user/reset-password',UserController.resetPassword);
 userRouter.post('/user/edit-password',UserController.editPassword);
-
+userRouter.get('/user/user-comments',UserController.userComment);
 
 module.exports =  userRouter;

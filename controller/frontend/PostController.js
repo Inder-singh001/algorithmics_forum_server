@@ -76,7 +76,7 @@ const index = async (req, res) => {
         },
     ];
 
-    let data = await postModel.getListing(req, select, where, joins); // Fetching posts based on the filters
+    let data = await postModel.getListing2(req, select, where, joins); // Fetching posts based on the filters
     if (data) {
         let count = await postModel.getCounts(where); // Getting the count of posts based on the filters
         res.send({
