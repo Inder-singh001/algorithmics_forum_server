@@ -67,15 +67,12 @@ const index = async (req, res) => {
     let joins = [
         {
             path: 'user_id',
-            select: {
-                '_id': 1 // Excluding the created_at field from the cat_id join
-            }
+            select: '_id first_name last_name'  // Excluding the created_at field from the cat_id join
+
         },
         {
             path: "cat_id",
-            select: {
-                created_at: 0, // Excluding the created_at field from the cat_id join
-            },
+            select: '_id title'
         },
     ];
 
