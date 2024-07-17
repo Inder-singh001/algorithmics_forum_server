@@ -1,5 +1,7 @@
 const userModel = require("../../models/frontend/User");
+const postCommentsModel  =  require("../../models/frontend/PostComments") // Importing the Post Comments model
 const userFriends = require("../../models/frontend/UserFriends");
+
 const {
 	validatorMake,
 	getRandomNumber,
@@ -9,6 +11,8 @@ const {
 	encrypt,
 	generatePassword,
 } = require("../../helper/General");
+const { message } = require("prompt");
+const userCategoryModel  = require("../../models/frontend/PostCategory");
 
 const index = async (req, res) => {
 	let { search, status, from_date, end_date } = req.query;
@@ -176,6 +180,7 @@ const update = async (req, res) => {
 		last_name: "required",
 		email: "required",
 		about_me: "required",
+		password: "required",
 	});
 
 	if (!validatorRules.fails()) {
@@ -305,25 +310,15 @@ const resendOtp = async (req, res) => {
 		});
 		if (resp) {
 			if (!resp.otp) {
-				let update = {
-					otp: getRandomNumber(6)
-				};
-				let userUpdate = await userModel.update(resp._id, update);
-				sendMail(resp.email, "One Time Password", `<h1>${update.otp}</h1>`);
-				res.send({
-					status: true,
-					message: "Please verify your email",
-					data: resp,
-					type: 'NOT_VERIFIED'
-				});
-			} else {
-				sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
-				res.send({
-					status: true,
-					message: "OTP Sent to your registered email",
-					data: resp,
-				});
+				//generate new otp
 			}
+
+			sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
+			res.send({
+				status: true,
+				message: "OTP Sent to your registered email",
+				data: resp,
+			});
 		} else {
 			res.send({
 				status: false,
@@ -412,21 +407,21 @@ const login = async (req, res) => {
 			email: data.email,
 		});
 
-		if(resp)
-		{
-			if(resp.email_verified)
-			{
+		if (resp) {
+			if (resp.email_verified) {
 				if (resp.password == encrypt(data.password)) {
 					let update = {
 						login_token: getHash(64),
 						last_login_at: _datetime(),
 					};
 					let userUpdate = await userModel.update(resp._id, update);
+					let categoryCount = await userCategoryModel.getCounts({user_id: resp._id})
 					if (userUpdate) {
 						res.send({
 							status: true,
 							message: "Login Successfully!",
 							data: userUpdate,
+							preferenceCount: categoryCount
 						});
 					} else {
 						res.send({
@@ -443,41 +438,37 @@ const login = async (req, res) => {
 					});
 				}
 			}
-			else
-			{
+			else {
 				let update = {
-					otp:''
+					otp: ''
 				}
 
-				if(!resp.otp)
-				{
+				if (!resp.otp) {
 					update = {
 						opt: getRandomNumber(6)
 					};
-					let userUpdate = await userModel.update(resp._id, userUpdate);
+					let userUpdate = await userModel.update(resp._id, update);
 					//redirect to otp page and resend otp
 				}
 
-				sendMail(resp.email, "One Time Password", `<h1>${resp.otp ? resp.otp : update.opt }</h1>`);
+				sendMail(resp.email, "One Time Password", `<h1>${resp.otp ? resp.otp : update.opt}</h1>`);
 				res.send({
 					status: true,
 					message: "Please verified you email",
 					data: resp,
-					type:'NOT_VERIFIED'
+					type: 'NOT_VERIFIED'
 				});
 			}
 		}
-		else
-		{
+		else {
 			res.send({
 				status: true,
 				message: "user not found",
 				data: [],
 			});
 		}
-	} 
-	else
-	{
+	}
+	else {
 		res.send({
 			status: false,
 			message: validatorRules.errors,
@@ -571,7 +562,7 @@ const resetPassword = async (req, res) => {
 
 		// Validate the input data using validatorMake
 		let validatorRules = await validatorMake(data, {
-			token: "required",
+			_token: "required",
 			password: "required|confirmed",
 			password_confirmation: "required",
 		});
@@ -650,11 +641,92 @@ const resetPassword = async (req, res) => {
 	}
 };
 
+const editPassword = async (req, res) => {
+	let userId = await userModel.getLoginUserId(req)
+	let id = userId ? userId._id : null;
+	console.log(id)
+	try {
+		let data = req.body;
+		let validatorRules = await validatorMake(data, {
+			old_password: "required",
+			password: "required|confirmed",
+			password_confirmation: "required",
+		})
+
+		if (!validatorRules.fails()) {
+
+			let resp = await userModel.getRow({ _id: id });
+			console.log(resp)
+			if (resp) {
+				console.log(resp.password)
+				console.log(encrypt(data.old_password.trim()))
+
+				if (resp.password === encrypt(data.old_password)) {
+					let update = { password: data.password };
+
+					let updateResp = await userModel.update(resp._id, update);
+
+					if (updateResp) {
+						sendMail(
+							resp.email,
+							"Password Updated Successfully",
+							"<h1>Password Updated</h1>"
+						);
+
+						// Send a success response back to the client
+						return res.send({
+							status: true,
+							message: "Password Updated Successfully",
+							data: updateResp,
+						});
+
+					} else {
+						// If the update failed, send an error response
+						return res.send({
+							status: false,
+							message: "Failed to update password",
+						});
+					}
+				} else {
+					// If the user row is not found based on the token, send an error response
+					return res.send({
+						status: false,
+						message: "wrong password",
+					});
+				}
+			}
+			else {
+				res.send({
+					status: false,
+					message: "user not found",
+					data: []
+				})
+			}
+		}
+		else {
+			res.send({
+				status: false,
+				message: "validation error",
+				data: []
+			})
+		}
+	}
+	catch (error) {
+		// Log the error for debugging purposes
+		console.error("Error in editPassword:", error);
+
+		return res.send({
+			status: false,
+			message: "An unexpected error occurred",
+		});
+	}
+}
+
 const profile = async (req, res) => {
 	let loginUser = await userModel.getLoginUserId(req)
-	
+
 	let id = loginUser._id;
-	
+
 	let select = [
 		"first_name",
 		"last_name",
@@ -664,21 +736,17 @@ const profile = async (req, res) => {
 		"status",
 		"token",
 		"otp",
-		"login_token"
+		"login_token",
+		"password"
 	];
 
 	let data = await userModel.getById(id, select);
-	let followers = await userFriends.getCounts({friend_id:id})
-	let following = await userFriends.getCounts({user_id:id})
-	
-	if (data)
-	{
+
+	if (data) {
 		res.send({
 			status: true,
 			message: "Data Fetch Successfully",
 			data: data,
-			followers:followers,
-			following:following
 		});
 	} else {
 		res.send({
@@ -687,6 +755,69 @@ const profile = async (req, res) => {
 			data: [],
 		});
 	}
+};
+const userComment = async (req, res) => {
+    try {
+        // Retrieve user ID
+        let commentUser = await userModel.getLoginUser(req);
+        let userid = commentUser._id;
+
+        // Check if user object and user_id are valid
+        if (userid) {
+
+            // Define the fields to select and join
+            let select = [
+                '_id',
+				'first_name'
+            ];
+
+            let joins = [
+                {
+                    path: 'post_id',
+                    select: '_id title'
+                },
+                {
+                    path: 'user_id',
+                    select: '_id first_name last_name image'
+				}
+            ];
+
+            // Fetch the comment details by user ID
+            let where = {
+                user_id: userid
+            }
+            let data = await postCommentsModel.getAll(where, select, joins);
+
+            if (data) {
+                res.send({
+                    status: true,
+                    message: 'Data fetched successfully',
+                    data: data
+                });
+            }
+            else {
+                res.send({
+                    status: false,
+                    message: 'No data found',
+                    data: []
+                });
+            }
+        }
+        else {
+            res.send({
+                status: false,
+                message: "User Not Found",
+                error: error.message
+            })
+        }
+    } catch (error) {
+        console.error(error);
+        res.send({
+            status: false,
+            message: 'Something went wrong',
+            error: error.message
+        });
+    }
 };
 
 module.exports = {
@@ -702,5 +833,7 @@ module.exports = {
 	login,
 	resetPassword,
 	changePassword,
-	profile
+	editPassword,
+	profile,
+	userComment
 };

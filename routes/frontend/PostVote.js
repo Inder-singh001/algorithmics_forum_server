@@ -8,5 +8,6 @@ postVoteRouter.post('/post-vote/add',PostVoteController.add);
 postVoteRouter.post('/post-vote/update/:id',PostVoteController.update);
 postVoteRouter.post('/post-vote/update-status/:id',PostVoteController.updateStatus);
 postVoteRouter.get('/post-vote/delete/:id',PostVoteController.deleteRow);
+postVoteRouter.post('/post-vote/insert',PostVoteController.postVote);
 
 module.exports =  postVoteRouter;

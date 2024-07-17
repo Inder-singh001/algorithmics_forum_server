@@ -21,7 +21,6 @@ module.exports = (dbConnection, { Schema }) => {
     type: {
       type: Number,
       required: true,
-      default: 0,
     },
 
     created_at: {
