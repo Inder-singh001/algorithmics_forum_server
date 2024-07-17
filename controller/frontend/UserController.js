@@ -1,4 +1,5 @@
 const userModel = require("../../models/frontend/User");
+const postCommentsModel  =  require("../../models/frontend/PostComments") // Importing the Post Comments model
 const userFriends = require("../../models/frontend/UserFriends");
 const {
 	validatorMake,
@@ -571,7 +572,7 @@ const resetPassword = async (req, res) => {
 
 		// Validate the input data using validatorMake
 		let validatorRules = await validatorMake(data, {
-			token: "required",
+			_token: "required",
 			password: "required|confirmed",
 			password_confirmation: "required",
 		});
@@ -688,6 +689,69 @@ const profile = async (req, res) => {
 		});
 	}
 };
+const userComment = async (req, res) => {
+    try {
+        // Retrieve user ID
+        let commentUser = await userModel.getLoginUser(req);
+        let userid = commentUser._id;
+
+        // Check if user object and user_id are valid
+        if (userid) {
+
+            // Define the fields to select and join
+            let select = [
+                '_id',
+				'first_name'
+            ];
+
+            let joins = [
+                {
+                    path: 'post_id',
+                    select: '_id title'
+                },
+                {
+                    path: 'user_id',
+                    select: '_id first_name last_name image'
+				}
+            ];
+
+            // Fetch the comment details by user ID
+            let where = {
+                user_id: userid
+            }
+            let data = await postCommentsModel.getAll(where, select, joins);
+
+            if (data) {
+                res.send({
+                    status: true,
+                    message: 'Data fetched successfully',
+                    data: data
+                });
+            }
+            else {
+                res.send({
+                    status: false,
+                    message: 'No data found',
+                    data: []
+                });
+            }
+        }
+        else {
+            res.send({
+                status: false,
+                message: "User Not Found",
+                error: error.message
+            })
+        }
+    } catch (error) {
+        console.error(error);
+        res.send({
+            status: false,
+            message: 'Something went wrong',
+            error: error.message
+        });
+    }
+};
 
 module.exports = {
 	add,
@@ -702,5 +766,6 @@ module.exports = {
 	login,
 	resetPassword,
 	changePassword,
-	profile
+	profile,
+	userComment
 };

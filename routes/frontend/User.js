@@ -16,6 +16,7 @@ userRouter.post('/user/verify-otp',UserController.verifyOtp);
 userRouter.post('/user/login',UserController.login);
 userRouter.post('/user/change-password',UserController.changePassword);
 userRouter.post('/user/reset-password',UserController.resetPassword);
+userRouter.get('/user/user-comments',UserController.userComment);
 
 
 module.exports =  userRouter;

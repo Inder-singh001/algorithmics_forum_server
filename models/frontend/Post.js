@@ -159,6 +159,30 @@ const remove = async (id) => {
     }
 }
 
+const getLoginUserId = async (req) => {
+    try
+    {   
+        let token = await getById(req);
+        if(token)
+        {
+            let record = await getRow({
+                login_token:token
+            },['_id']);
+           
+            return record;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    catch(error)
+    {
+        console.log(error)
+        return false;
+    }
+}
+
 module.exports = { 
     insert,
     update,
