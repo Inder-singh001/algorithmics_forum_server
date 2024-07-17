@@ -1,5 +1,7 @@
 const postVoteModel = require("../../models/frontend/PostVote"); // Importing the PostVote model
 const { validatorMake } = require("../../helper/General"); // Importing the validatorMake function
+const { getById } = require("../../models/frontend/Post");
+const {getLoginUserId} = require("../../models/frontend/User");
 
 const index = async (req, res) => {
   let { search, status, from_date, end_date } = req.query; // Destructuring the query parameters
@@ -232,22 +234,71 @@ const deleteRow = async (req, res) => {
 };
 
 const postVote = async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { attendedClass: 1, totalClass: 1 } },
-      { new: true }
-    );
+    try {
+        let { post_id, type } = req.body;
+        let user_id = await getLoginUserId(req);
+        let post = await getById(post_id);
 
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
+        if (user_id && post) {
+            let data = {
+                user_id: user_id._id,
+                post_id: post._id,
+                type: type,
+            };
+
+            let whereCheck = {
+                user_id: user_id._id,
+                post_id: post._id
+            }
+            let checkVote = await postVoteModel.getRow(whereCheck);
+
+            if (!checkVote) {
+                let resp = await postVoteModel.insert(data);
+
+                if (resp) {
+                    res.send({
+                        status: true,
+                        message: "Vote Registered Successfully",
+                        data: resp,
+                    });
+                } else {
+                    res.send({
+                        status: false,
+                        message: "Failed to register Vote",
+                        data: [],
+                    });
+                }
+            } 
+            else {
+                res.send({
+                    status: false,
+                    message: "Cannot make duplicate Votes",
+                    data: [],
+                });
+            }
+        } else {
+            res.send({
+                status: false,
+                message: "Invalid User or Post",
+                data: [],
+            });
+        }
+    } catch (error) {
+        res.send({
+            status: false,
+            message: "Something went wrong",
+            data: [],
+        });
     }
-
-    res.json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
 };
 
-module.exports = { add, detail, index, update, updateStatus, deleteRow };
+
+module.exports = {
+  add,
+  detail,
+  index,
+  update,
+  updateStatus,
+  deleteRow,
+  postVote,
+};
