@@ -1,5 +1,5 @@
 const userModel = require("../../models/frontend/User");
-const postCommentsModel  =  require("../../models/frontend/PostComments") // Importing the Post Comments model
+const postCommentsModel = require("../../models/frontend/PostComments") // Importing the Post Comments model
 const userFriends = require("../../models/frontend/UserFriends");
 
 const {
@@ -11,7 +11,8 @@ const {
 	encrypt,
 	generatePassword,
 } = require("../../helper/General");
-const userCategoryModel  = require("../../models/frontend/PostCategory");
+const userCategoryModel = require("../../models/frontend/UserCategory");
+const { userCategory } = require("../../models");
 
 const index = async (req, res) => {
 	let { search, status, from_date, end_date } = req.query;
@@ -309,9 +310,25 @@ const resendOtp = async (req, res) => {
 		});
 		if (resp) {
 			if (!resp.otp) {
-				//generate new otp
+				let update = {
+					otp: getRandomNumber(6)
+				};
+				let userUpdate = await userModel.update(resp._id, update);
+				sendMail(resp.email, "One Time Password", `<h1>${update.otp}</h1>`);
+				res.send({
+					status: true,
+					message: "Please verify your email",
+					data: resp,
+					type: 'NOT_VERIFIED'
+				});
+			} else {
+				sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
+				res.send({
+					status: true,
+					message: "OTP Sent to your registered email",
+					data: resp,
+				});
 			}
-
 			sendMail(resp.email, "One Time Password", `<h1>${resp.otp}</h1>`);
 			res.send({
 				status: true,
@@ -414,7 +431,7 @@ const login = async (req, res) => {
 						last_login_at: _datetime(),
 					};
 					let userUpdate = await userModel.update(resp._id, update);
-					let categoryCount = await userCategoryModel.getCounts({user_id: resp._id})
+					let categoryCount = await userCategoryModel.getCounts({ user_id: resp._id })
 					if (userUpdate) {
 						res.send({
 							status: true,
@@ -723,8 +740,7 @@ const editPassword = async (req, res) => {
 
 const profile = async (req, res) => {
 	let loginUser = await userModel.getLoginUserId(req)
-
-	let id = loginUser._id;
+	let id = loginUser ? loginUser._id : null;
 
 	let select = [
 		"first_name",
@@ -740,12 +756,16 @@ const profile = async (req, res) => {
 	];
 
 	let data = await userModel.getById(id, select);
+	let followers = await userFriends.getCounts({ friend_id: id })
+	let following = await userFriends.getCounts({ user_id: id })
 
 	if (data) {
 		res.send({
 			status: true,
 			message: "Data Fetch Successfully",
 			data: data,
+			followers: followers,
+			following: following
 		});
 	} else {
 		res.send({
@@ -756,67 +776,111 @@ const profile = async (req, res) => {
 	}
 };
 const userComment = async (req, res) => {
-    try {
-        // Retrieve user ID
-        let commentUser = await userModel.getLoginUser(req);
-        let userid = commentUser._id;
+	try {
+		// Retrieve user ID
+		let commentUser = await userModel.getLoginUser(req);
+		let userid = commentUser ? commentUser._id : null;
 
-        // Check if user object and user_id are valid
-        if (userid) {
+		// Check if user object and user_id are valid
+		if (userid) {
 
-            // Define the fields to select and join
-            let select = [
-                '_id',
+			// Define the fields to select and join
+			let select = [
+				'_id',
 				'first_name'
-            ];
+			];
 
-            let joins = [
-                {
-                    path: 'post_id',
-                    select: '_id title'
-                },
-                {
-                    path: 'user_id',
-                    select: '_id first_name last_name image'
+			let joins = [
+				{
+					path: 'post_id',
+					select: '_id title'
+				},
+				{
+					path: 'user_id',
+					select: '_id first_name last_name image'
 				}
-            ];
+			];
 
-            // Fetch the comment details by user ID
-            let where = {
-                user_id: userid
-            }
-            let data = await postCommentsModel.getAll(where, select, joins);
+			// Fetch the comment details by user ID
+			let where = {
+				user_id: userid
+			}
+			let data = await postCommentsModel.getAll(where, select, joins);
 
-            if (data) {
-                res.send({
-                    status: true,
-                    message: 'Data fetched successfully',
-                    data: data
-                });
-            }
-            else {
-                res.send({
-                    status: false,
-                    message: 'No data found',
-                    data: []
-                });
-            }
-        }
-        else {
-            res.send({
-                status: false,
-                message: "User Not Found",
-                error: error.message
-            })
-        }
-    } catch (error) {
-        console.error(error);
-        res.send({
-            status: false,
-            message: 'Something went wrong',
-            error: error.message
-        });
-    }
+			if (data) {
+				res.send({
+					status: true,
+					message: 'Data fetched successfully',
+					data: data
+				});
+			}
+			else {
+				res.send({
+					status: false,
+					message: 'No data found',
+					data: []
+				});
+			}
+		}
+		else {
+			res.send({
+				status: false,
+				message: "User Not Found",
+				error: error.message
+			})
+		}
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: 'Something went wrong',
+			error: error.message
+		});
+	}
+};
+
+const logout = async (req, res) => {
+
+	let logOutUser = await userModel.getLoginUser(req);
+	let userid = logOutUser ? logOutUser._id : null;
+	if (userid) {
+		let resp = await userModel.getRow({
+			_id: userid,
+		});
+		if (resp) {
+			let update = {
+				login_token: null,
+				token_expiry_at: null
+			};
+			let userUpdate = await userModel.update(resp._id, update);
+			if (userUpdate) {
+				res.send({
+					status: true,
+					message: "Logout Successfully!",
+					data: userUpdate,
+				});
+			} else {
+				res.send({
+					status: false,
+					message: "Logout Failed, Try Again!",
+					data: [],
+				});
+			}
+		}
+		else {
+			res.send({
+				status: false,
+				message: "user not found",
+				data: [],
+			});
+		}
+	}
+	else {
+		res.send({
+			status: false,
+			message: validatorRules.errors,
+		});
+	}
 };
 
 module.exports = {
@@ -834,5 +898,6 @@ module.exports = {
 	changePassword,
 	editPassword,
 	profile,
-	userComment
+	userComment,
+	logout
 };
