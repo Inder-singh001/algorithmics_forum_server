@@ -234,15 +234,12 @@ const deleteRow = async (req, res) => {
 };
 
 const postVote = async (req, res) => {// This function handles processing a user's vote on a post
-
+  
   try { // Try block to catch any errors during the process
-
     let { post_id, type } = req.body;// Destructure post_id and type from the request body
-
     let user_id = await getLoginUserId(req);// Get the logged-in user's ID using getLoginUserId function (assumed to be implemented elsewhere)
-
     let post = await getById(post_id);// Get the post details by its ID using getById function (assumed to be implemented elsewhere)
-
+    
     if (user_id && post) {// Check if both user and post are valid
 
       let data = {
