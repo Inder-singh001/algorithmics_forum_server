@@ -67,19 +67,16 @@ const index = async (req, res) => {
     let joins = [
         {
             path: 'user_id',
-            select: {
-                '_id': 1 // Excluding the created_at field from the cat_id join
-            }
+            select: '_id first_name last_name'  // Excluding the created_at field from the cat_id join
+
         },
         {
             path: "cat_id",
-            select: {
-                created_at: 0, // Excluding the created_at field from the cat_id join
-            },
+            select: '_id title'
         },
     ];
 
-    let data = await postModel.getListing(req, select, where, joins); // Fetching posts based on the filters
+    let data = await postModel.getListing2(req, select, where, joins); // Fetching posts based on the filters
     if (data) {
         let count = await postModel.getCounts(where); // Getting the count of posts based on the filters
         res.send({

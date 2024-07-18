@@ -291,7 +291,7 @@ const userPostAnswer = async (req, res) => {
   }
 };
 
-const postComments = async (req, res) => {
+const getpostComments = async (req, res) => {
   let { postId } = req.params;
 
   let select = ["user_id", "description", "created_at"];
@@ -317,11 +317,57 @@ const postComments = async (req, res) => {
   }
 };
 
+const addComments = async (req, res) => {
+
+  let commentUser = await userModel.getLoginUserId(req)
+  let userId = commentUser ? commentUser._id : null
+
+  let data = req.body; // Getting the post data from the request body
+  if (userId) {
+    let validatorRules = await validatorMake(data, {
+      user_id: "required",
+      post_id: "required",
+      description: "required", // Validating that the title field is required
+    });
+    
+    data.user_id = userId
+
+    if (!validatorRules.fails()) {
+      let resp = await postCommentsModel.insert(data); // Inserting the post data into the database
+      if (resp) {
+        res.send({
+          status: true,
+          message: "Comment added",
+          data: resp,
+        });
+      } else {
+        res.send({
+          status: true,
+          message: "Something went wrong",
+          data: [],
+        });
+      }
+    } else {
+      res.send({
+        status: false,
+        message: validatorRules.errors, // Sending validation errors if any
+      });
+    }
+  }
+  else {
+    res.send({
+      status: false,
+      message: "user not found", // Sending validation errors if any
+    });
+  }
+}
+
 module.exports = {
   add,
   detail,
   index,
   deleteRow,
   userPostAnswer,
-  postComments,
+  getpostComments,
+  addComments
 };
