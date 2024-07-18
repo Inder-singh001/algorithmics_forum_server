@@ -432,6 +432,7 @@ const login = async (req, res) => {
 					};
 					let userUpdate = await userModel.update(resp._id, update);
 					let categoryCount = await userCategoryModel.getCounts({ user_id: resp._id })
+					let categoryCount = await userCategoryModel.getCounts({ user_id: resp._id })
 					if (userUpdate) {
 						res.send({
 							status: true,
@@ -578,7 +579,7 @@ const resetPassword = async (req, res) => {
 
 		// Validate the input data using validatorMake
 		let validatorRules = await validatorMake(data, {
-			_token: "required",
+			token: "required",
 			password: "required|confirmed",
 			password_confirmation: "required",
 		});
@@ -660,24 +661,22 @@ const resetPassword = async (req, res) => {
 const editPassword = async (req, res) => {
 	let userId = await userModel.getLoginUserId(req)
 	let id = userId ? userId._id : null;
-	console.log(id)
+
 	try {
 		let data = req.body;
 		let validatorRules = await validatorMake(data, {
 			old_password: "required",
-			password: "required|confirmed",
-			password_confirmation: "required",
+			password: "required",
+			password_confirmation: "required|same:password",
 		})
 
 		if (!validatorRules.fails()) {
 
 			let resp = await userModel.getRow({ _id: id });
-			console.log(resp)
-			if (resp) {
-				console.log(resp.password)
-				console.log(encrypt(data.old_password.trim()))
 
-				if (resp.password === encrypt(data.old_password)) {
+			if (resp) {
+
+				if (resp.password === encrypt(data.old_password) && data.old_password != data.password) {
 					let update = { password: data.password };
 
 					let updateResp = await userModel.update(resp._id, update);
@@ -704,11 +703,20 @@ const editPassword = async (req, res) => {
 						});
 					}
 				} else {
-					// If the user row is not found based on the token, send an error response
-					return res.send({
-						status: false,
-						message: "wrong password",
-					});
+					if (resp.password != encrypt(data.old_password)) {
+						return res.send({
+							status: false,
+							message: "wrong password",
+						});
+					}
+					else (data.old_password = data.password)
+					{
+						return res.send({
+							status: false,
+							message: "New password cannot be the same as the old password"
+						})
+					}
+
 				}
 			}
 			else {
@@ -775,6 +783,7 @@ const profile = async (req, res) => {
 		});
 	}
 };
+
 const userComment = async (req, res) => {
 	try {
 		// Retrieve user ID
@@ -783,11 +792,17 @@ const userComment = async (req, res) => {
 
 		// Check if user object and user_id are valid
 		if (userid) {
+		// Check if user object and user_id are valid
+		if (userid) {
 
 			// Define the fields to select and join
 			let select = [
 				'_id',
+			// Define the fields to select and join
+			let select = [
+				'_id',
 				'first_name'
+			];
 			];
 
 			let joins = [
@@ -798,7 +813,16 @@ const userComment = async (req, res) => {
 				{
 					path: 'user_id',
 					select: '_id first_name last_name image'
+			let joins = [
+				{
+					path: 'post_id',
+					select: '_id title'
+				},
+				{
+					path: 'user_id',
+					select: '_id first_name last_name image'
 				}
+			];
 			];
 
 			// Fetch the comment details by user ID
@@ -806,7 +830,42 @@ const userComment = async (req, res) => {
 				user_id: userid
 			}
 			let data = await postCommentsModel.getAll(where, select, joins);
+			// Fetch the comment details by user ID
+			let where = {
+				user_id: userid
+			}
+			let data = await postCommentsModel.getAll(where, select, joins);
 
+			if (data) {
+				res.send({
+					status: true,
+					message: 'Data fetched successfully',
+					data: data
+				});
+			}
+			else {
+				res.send({
+					status: false,
+					message: 'No data found',
+					data: []
+				});
+			}
+		}
+		else {
+			res.send({
+				status: false,
+				message: "User Not Found",
+				error: error.message
+			})
+		}
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: 'Something went wrong',
+			error: error.message
+		});
+	}
 			if (data) {
 				res.send({
 					status: true,
