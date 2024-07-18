@@ -302,6 +302,113 @@ const getPostId = async (req) => {
     }
 }
 
+const getListingbyUserID = async (req, select = {}, where = {}, joins = []) => {
+    try {
+        let {sort, direction, limit, offset, page} = req.query;
+        
+        direction = direction && direction == 'asc' ? 1 : -1;
+        sortField = sort ? sort : 'created_at';
+        limit     = limit ? parseInt(limit) : 10;
+        offset    = page > 1 ? ((page-1)*limit) : 0;
+        orderBy   = { [sortField]:direction }
+    
+      
+        let listing = post.aggregate([
+            {
+                $match:where
+            },
+            {
+                $project: select
+            },
+            {
+                $lookup:{
+                    from:'users',
+                    localField:'user_id',
+                    foreignField:'_id',
+                    as:'user',
+                    "pipeline":[
+                        {
+                            $project:{
+                               '_id': 1,
+                               'first_name':1,
+                               'last_name':1
+                            }
+                        }
+                    ]
+                },
+                    
+            },
+            {
+                $lookup:{
+                    from:'post_votes',
+                    localField:'_id',
+                    foreignField:'post_id',
+                    as:'up_votes',
+                    "pipeline":[
+                        {
+                            $match:{
+                                type:1
+                            }
+                        },
+                        { $group: { _id: null, count: { $sum: 1 } } },
+                    ]
+                }
+            },
+            {
+                $lookup:{
+                    from:'post_votes',
+                    localField:'_id',
+                    foreignField:'post_id',
+                    as:'down_votes',
+                    "pipeline":[
+                        {
+                            $match:{
+                                type:0
+                            }
+                        },
+                        { $group: { _id: null, count: { $sum: 1 } } },
+                    ]
+                }
+            },
+            {
+                $limit:limit
+            },
+            // {
+            //     $skip:1
+            // },
+            {
+                $sort:{
+                    [sortField]:direction
+                }
+            },
+            {
+                $unwind:{
+                    path:"$user",
+                    preserveNullAndEmptyArrays:false
+                }
+            },
+            {
+                $unwind:{
+                    path:"$down_votes",
+                    preserveNullAndEmptyArrays:true,
+                    includeArrayIndex:"down_votes_count",
+                }
+            },
+            {
+                $unwind:{
+                    path:"$up_votes",
+                    preserveNullAndEmptyArrays:true,
+                    includeArrayIndex:"up_votes_count",
+                }
+            }
+        ])
+        return listing; // Returning the array of records
+    } catch (error) {
+        console.log(error); // Logging any errors that occur
+        return false; // Returning false if an error occurs
+    }
+}
+
 module.exports = { 
     insert,
     update,
@@ -312,5 +419,6 @@ module.exports = {
     getCounts,
     remove,
     getPostId,
-    getListing2
+    getListing2,
+    getListingbyUserID
 };

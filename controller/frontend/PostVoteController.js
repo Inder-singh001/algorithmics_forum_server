@@ -233,64 +233,172 @@ const deleteRow = async (req, res) => {
   }
 };
 
-const postVote = async (req, res) => {
-    try {
-        let { post_id, type } = req.body;
-        let user_id = await getLoginUserId(req);
-        let post = await getById(post_id);
+const postVote = async (req, res) => {// This function handles processing a user's vote on a post
+  
+  try { // Try block to catch any errors during the process
+    let { post_id, type } = req.body;// Destructure post_id and type from the request body
+    let user_id = await getLoginUserId(req);// Get the logged-in user's ID using getLoginUserId function (assumed to be implemented elsewhere)
+    let post = await getById(post_id);// Get the post details by its ID using getById function (assumed to be implemented elsewhere)
+    
+    if (user_id && post) {// Check if both user and post are valid
 
-        if (user_id && post) {
-            let data = {
-                user_id: user_id._id,
-                post_id: post._id,
-                type: type,
-            };
+      let data = {
+        user_id: user_id._id,
+        post_id: post._id,
+        type: type,
+      };// Prepare data object containing user ID, post ID, and vote type
 
-            let whereCheck = {
-                user_id: user_id._id,
-                post_id: post._id
+      let whereCheck = {
+        user_id: user_id._id,
+        post_id: post._id,
+      };// Define a filter object to check for existing vote
+
+      let checkVote = await postVoteModel.getRow(whereCheck);// Check if the user already voted on this post using postVoteModel.getRow (assumed to be a model function)
+
+        if (!checkVote) {// If no prior vote is found
+
+          let resp = await postVoteModel.insert(data);
+          // Insert the new vote data using postVoteModel.insert (assumed to be a model function)
+
+          if (resp) 
+            {// If insertion is successful
+              res.send({
+                status: true,
+                message: "Vote Registered Successfully",
+                data: resp,
+              });// Send a success response with the inserted data
             }
-            let checkVote = await postVoteModel.getRow(whereCheck);
-
-            if (!checkVote) {
-                let resp = await postVoteModel.insert(data);
-
-                if (resp) {
-                    res.send({
-                        status: true,
-                        message: "Vote Registered Successfully",
-                        data: resp,
-                    });
-                } else {
-                    res.send({
-                        status: false,
-                        message: "Failed to register Vote",
-                        data: [],
-                    });
-                }
-            } 
-            else {
-                res.send({
-                    status: false,
-                    message: "Cannot make duplicate Votes",
-                    data: [],
-                });
-            }
-        } else {
-            res.send({
+            else 
+            {// If insertion fails
+              res.send({
                 status: false,
-                message: "Invalid User or Post",
+                message: "Failed to register Vote",
                 data: [],
-            });
+              });// Send a failure response with an empty data array
+            }
+        } 
+        else if(data.type != checkVote.type) 
+        {// If a prior vote is found
+          let response = await postVoteModel.update(checkVote._id,{'type':data.type});
+          if (response)
+            {
+              res.send({
+                status: true,
+                message: "Updated Resposnse",
+                data:response,
+              });// Send a response indicating duplicate vote attempt with an empty data array
+            }
+            else 
+            {
+              res.send({
+                status: false,
+                message: "Failed to register Vote",
+                data: [],
+              });// Send a response indicating duplicate vote attempt with an empty data array
+            }
         }
-    } catch (error) {
+        else 
+        {
+          let resp = await postVoteModel.remove(checkVote._id);
+          if(resp)
+          {
+            res.send({
+              status: true,
+              message: "Vote Deleted",
+              data: [],
+            });
+          }
+          else
+          {
+            res.send({
+              status: false,
+              message: "Something went wrong",
+              data: [],
+            });
+          }
+        }
+      } 
+      else 
+      {// If user or post is invalid
         res.send({
-            status: false,
-            message: "Something went wrong",
-            data: [],
-        });
+          status: false,
+          message: "Invalid User or Post",
+          data: [],
+        });// Send a response indicating invalid user or post with an empty data array
+      }
+    } 
+    catch (error) 
+    {// Catch any errors during the process
+      res.send({
+        status: false,
+        message: "Something went wrong",
+        data: [],
+      });// Send a generic error response with an empty data array
     }
 };
+
+// const postVote = async (req, res) => {
+//   try {
+//     const { post_id, type } = req.body;
+//     const user_id = await getLoginUserId(req);
+//     const post = await getById(post_id);
+
+//     if (user_id && post) {
+//       const data = {
+//         user_id: user_id._id,
+//         post_id: post._id,
+//         type: type,
+//       };
+
+//       const whereCheck = {
+//         user_id: user_id._id,
+//         post_id: post._id,
+//       };
+
+//       const existingVote = await postVoteModel.getRow(whereCheck);
+
+//       if (existingVote) {
+//         // Check if vote type matches and remove if so
+//         if (existingVote.type === type) {
+//           await postVoteModel.deleteRow(whereCheck);
+//           return res.send({
+//             status: true,
+//             message: "Vote Removed Successfully",
+//             data: null, // Indicate vote removal instead of data
+//           });
+//         }
+//       } else {
+//         const resp = await postVoteModel.insert(data);
+//         if (resp) {
+//           res.send({
+//             status: true,
+//             message: "Vote Registered Successfully",
+//             data: resp,
+//           });
+//         } else {
+//           res.send({
+//             status: false,
+//             message: "Failed to register Vote",
+//             data: [],
+//           });
+//         }
+//       }
+//       // Insert new vote only if it's a different type or no prior vote exists
+//     } else {
+//       res.send({
+//         status: false,
+//         message: "Invalid User or Post",
+//         data: [],
+//       });
+//     }
+//   } catch (error) {
+//     res.send({
+//       status: false,
+//       message: "Something went wrong",
+//       data: [],
+//     });
+//   }
+// };
 
 
 module.exports = {
@@ -302,3 +410,4 @@ module.exports = {
   deleteRow,
   postVote,
 };
+
