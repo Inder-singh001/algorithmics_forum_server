@@ -11,7 +11,6 @@ const {
 	encrypt,
 	generatePassword,
 } = require("../../helper/General");
-const { message } = require("prompt");
 const userCategoryModel  = require("../../models/frontend/PostCategory");
 
 const index = async (req, res) => {

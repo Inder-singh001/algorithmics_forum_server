@@ -2,6 +2,7 @@ const userCategoryModel  =  require("../../models/frontend/UserCategory") // Imp
 const { postCategory } = require('../../models/index') // Importing the postCategory model
 const { validatorMake }  = require('../../helper/General'); // Importing the validatorMake function
 const { populate } = require("dotenv"); // Importing the populate function from dotenv
+const userModel  = require("../../models/frontend/User");
 
 const index = async (req, res) => {
     let { search, status, from_date, end_date }  = req.query // Destructuring the query parameters
@@ -149,18 +150,21 @@ const detail = async (req, res) => {
 };
 
 const add = async (req, res) => {
+
+    let IDCategory = await userModel.getLoginUserId(req)
+    let userId = IDCategory._id
+
     let data = req.body; // Getting the post data from the request body
     let validatorRules = await validatorMake(
         data,
         {
-            "user_id": "required",
             "cat_id":"required" // Validating that the title field is required
         }
     );
-
     if(!validatorRules.fails())
     {
-        let resp = await userCategoryModel.insert(data); // Inserting the post data into the database
+        data.user_id = userId
+        let resp = await userCategoryModel.insert(data); // Inserting the post data into the databaseF
         if(resp)
         {
             res.send({
@@ -172,7 +176,7 @@ const add = async (req, res) => {
         else
         {
             res.send({
-                'status':true,
+                'status':false,
                 'message':'Network error!',
                 'data':[]
             })
