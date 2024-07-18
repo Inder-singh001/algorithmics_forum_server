@@ -274,17 +274,17 @@ const userPost = async (req, res) => {
         if (userid) {
 
             // Define the fields to select and join
-            let select = [
-                'user_id',
-                'title',
-                'description',
-                'file',
-                'status',
-                'type',
-                'created_at',
-                'updated_at',
-                'cat_id'
-            ];
+            let select = {
+                'user_id':1,
+                'title':1,
+                'description':1,
+                'file':1,
+                'status':1,
+                'type':1,
+                'created_at':1,
+                'updated_at':1,
+                'cat_id':1
+            };
 
             let joins = [
                 {
@@ -301,7 +301,7 @@ const userPost = async (req, res) => {
             let where = {
                 user_id: userid
             }
-            let data = await postModel.getAll(where, select, joins);
+            let data = await postModel.getListingbyUserID(req, select, where);
 
             if (data) {
                 res.send({
