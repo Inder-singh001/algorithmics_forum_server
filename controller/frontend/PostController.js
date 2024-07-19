@@ -30,6 +30,7 @@ const index = async (req, res) => {
     };
   }
 
+
   if (end_date && from_date) {
     where = {
       ...where,
@@ -54,17 +55,17 @@ const index = async (req, res) => {
     };
   }
 
-  let select = [
-    "user_id",
-    "title",
-    "description",
-    "file",
-    "status",
-    "type",
-    "cat_id",
-    "created_at",
-  ];
-
+    let select = {
+        "user_id": 1,
+        "title": 1,
+        "description": 1,
+        "file": 1,
+        "status": 1,
+        "type": 1,
+        "cat_id": 1,
+        "created_at": 1,
+    };
+  
   let joins = [
     {
       path: "user_id",
@@ -76,22 +77,23 @@ const index = async (req, res) => {
     },
   ];
 
-  let data = await postModel.getListing2(req, select, where, joins); // Fetching posts based on the filters
-  if (data) {
-    let count = await postModel.getCounts(where); // Getting the count of posts based on the filters
-    res.send({
-      status: true,
-      message: "Data Fetch Successfully",
-      total: count,
-      data: data,
-    });
-  } else {
-    res.send({
-      status: true,
-      message: "Something went wrong",
-      data: [],
-    });
-  }
+    let data = await postModel.getListingbyUserID(req, select); // Fetching posts based on the filters
+    if (data) {
+        let count = await postModel.getCounts(where); // Getting the count of posts based on the filters
+        res.send({
+            status: true,
+            message: "Data Fetch Successfully",
+            total: count,
+            data: data,
+        });
+    } else {
+        res.send({
+            status: true,
+            message: "Something went wrong",
+            data: [],
+        });
+    }
+
 };
 
 const detail = async (req, res) => {
@@ -264,74 +266,6 @@ const deleteRow = async (req, res) => {
   }
 };
 
-const userPost = async (req, res) => {
-  try {
-    // Retrieve user ID
-    let postUser = await userModel.getLoginUser(req);
-    let userid = postUser._id;
-
-    // Check if user object and user_id are valid
-    if (userid) {
-      // Define the fields to select and join
-      let select = [
-        "user_id",
-        "title",
-        "description",
-        "file",
-        "status",
-        "type",
-        "created_at",
-        "updated_at",
-        "cat_id",
-      ];
-
-      let joins = [
-        {
-          path: "cat_id",
-          select: "_id title",
-        },
-        {
-          path: "user_id",
-          select: "_id first_name last_name image",
-        },
-      ];
-
-      // Fetch the post details by user ID
-      let where = {
-        user_id: userid,
-      };
-      let data = await postModel.getAll(where, select, joins);
-
-      if (data) {
-        res.send({
-          status: true,
-          message: "Data fetched successfully",
-          data: data,
-        });
-      } else {
-        res.send({
-          status: false,
-          message: "No data found",
-          data: [],
-        });
-      }
-    } else {
-      res.send({
-        status: false,
-        message: "User Not Found",
-        error: error.message,
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    res.send({
-      status: false,
-      message: "Something went wrong",
-      error: error.message,
-    });
-  }
-};
-
 const featuredPost = async (req, res) => {
   let select = ["first_name", "last_name"];
 
@@ -350,6 +284,76 @@ const featuredPost = async (req, res) => {
       data: [],
     });
   }
+
+const userPost = async (req, res) => {
+    try {
+        // Retrieve user ID
+        let postUser = await userModel.getLoginUser(req);
+        let userid = postUser._id;
+
+        // Check if user object and user_id are valid
+        if (userid) {
+
+            // Define the fields to select and join
+            let select = {
+                'user_id': 1,
+                'title': 1,
+                'description': 1,
+                'file': 1,
+                'status': 1,
+                'type': 1,
+                'created_at': 1,
+                'updated_at': 1,
+                'cat_id': 1
+            };
+
+            let joins = [
+                {
+                    path: 'cat_id',
+                    select: '_id title'
+                },
+                {
+                    path: 'user_id',
+                    select: '_id first_name last_name image'
+                }
+            ];
+
+            // Fetch the post details by user ID
+            let where = {
+                user_id: userid
+            }
+            let data = await postModel.getListingbyUserID(req, select, where);
+
+            if (data) {
+                res.send({
+                    status: true,
+                    message: 'Data fetched successfully',
+                    data: data
+                });
+            }
+            else {
+                res.send({
+                    status: false,
+                    message: 'No data found',
+                    data: []
+                });
+            }
+        }
+        else {
+            res.send({
+                status: false,
+                message: "User Not Found",
+                error: error.message
+            })
+        }
+    } catch (error) {
+        console.error(error);
+        res.send({
+            status: false,
+            message: 'Something went wrong',
+            error: error.message
+        });
+    }
 };
 
 const answerPost = async (req, res) => {
