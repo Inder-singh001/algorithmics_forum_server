@@ -188,6 +188,29 @@ const getLoginUser = async (req) => {
         return false;
     }
 }
+// const getLoginUserOtpToken = async (req) => {
+//     try
+//     {   
+//         let _token = await getBearerToken(req);
+//         if(token)
+//         {
+//             let record = await getRow({
+//                 token:_token
+//             },['_id']);
+           
+//             return record;
+//         }
+//         else
+//         {
+//             return false;
+//         }
+//     }
+//     catch(error)
+//     {
+//         console.log(error)
+//         return false;
+//     }
+// }
 
 const getLoginUserId = async (req) => {
     try
@@ -251,5 +274,6 @@ module.exports = {
     remove, // Remove a user record
     getLoginUser,
     getLoginUserId,
-    getFollower
+    getFollower,
+    // getLoginUserOtpToken
 };
