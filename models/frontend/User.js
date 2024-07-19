@@ -129,6 +129,104 @@ const getListing = async (req, select = {}, where = {}, joins = []) => {
     }
 }
 
+const getFeaturedPost = async (req, select = {}, where = {}, joins = []) => {
+    try {
+        let {sort, direction, limit, offset, page} = req.query;
+        
+        direction = direction && direction == 'asc' ? 1 : -1;
+        sortField = sort ? sort : 'created_at';
+        limit     = limit ? parseInt(limit) : '';
+        offset    = page > 1 ? ((page-1)*limit) : 0;
+        orderBy   = { [sortField]:direction }
+    
+        // let listing = user.find(where, select, {skip:offset})
+        //                 .populate(joins)
+        //                 .sort(orderBy)
+        //                 .limit(limit)
+
+        let listing = user.aggregate([
+            {
+                $lookup:{
+                    from:'posts',
+                    localField:'_id',
+                    foreignField:'user_id',
+                    as:'posts',
+                    pipeline:[
+                        {
+                            $facet:{
+                                meta:[
+                                    {
+                                        $count:"total"
+                                    }
+                                ],
+                                data:[
+                                    {
+                                        $sort:{'created_at':-1}
+                                    },
+                                    {
+                                        $skip:0
+                                    },
+                                    {
+                                        $limit:1
+                                    },
+                                    {
+                                        $project:{
+                                            "title":1,
+                                            "description":1
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $lookup:{
+                    from:'user_friends',
+                    localField:'_id',
+                    foreignField:'friend_id',
+                    as:'follower',
+                    pipeline:[
+                        {
+                            $count:"total"
+                        }
+                    ]
+                }
+            },
+            {
+                $project:{
+                    '_id':1,
+                    'first_name':1,
+                    'last_name':1,
+                    'posts':1,
+                    'follower':1,
+                }
+            },
+            {
+                $unwind:{
+                    path:'$posts',
+                    preserveNullAndEmptyArrays:true
+                
+                }
+            },
+            {
+                $unwind:{
+                    path:'$follower',
+                    preserveNullAndEmptyArrays:true
+                
+                }
+            }
+        ])
+        
+    
+        return listing;
+    } catch (error) {
+        console.log(error)
+        return false
+    }
+}
+
 // Function to get the count of user records based on a condition
 const getCounts = async (where = {}) => {
     try
@@ -251,5 +349,6 @@ module.exports = {
     remove, // Remove a user record
     getLoginUser,
     getLoginUserId,
-    getFollower
+    getFollower,
+    getFeaturedPost
 };
