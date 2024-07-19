@@ -53,16 +53,16 @@ const index = async (req, res) => {
         };
     }
 
-    let select = [
-        "user_id",
-        "title",
-        "description",
-        "file",
-        "status",
-        "type",
-        "cat_id",
-        "created_at",
-    ];
+    let select = {
+        "user_id": 1,
+        "title": 1,
+        "description": 1,
+        "file": 1,
+        "status": 1,
+        "type": 1,
+        "cat_id": 1,
+        "created_at": 1,
+    };
 
     let joins = [
         {
@@ -76,7 +76,7 @@ const index = async (req, res) => {
         },
     ];
 
-    let data = await postModel.getListing2(req, select, where, joins); // Fetching posts based on the filters
+    let data = await postModel.getListingbyUserID(req, select); // Fetching posts based on the filters
     if (data) {
         let count = await postModel.getCounts(where); // Getting the count of posts based on the filters
         res.send({
@@ -275,15 +275,15 @@ const userPost = async (req, res) => {
 
             // Define the fields to select and join
             let select = {
-                'user_id':1,
-                'title':1,
-                'description':1,
-                'file':1,
-                'status':1,
-                'type':1,
-                'created_at':1,
-                'updated_at':1,
-                'cat_id':1
+                'user_id': 1,
+                'title': 1,
+                'description': 1,
+                'file': 1,
+                'status': 1,
+                'type': 1,
+                'created_at': 1,
+                'updated_at': 1,
+                'cat_id': 1
             };
 
             let joins = [

@@ -5,3 +5,4 @@ exports.frontPostVoteRouter = require('./frontend/PostVote');
 exports.frontPostCommentsRouter = require('./frontend/PostComments');
 exports.frontUserCategoryRouter = require('./frontend/UserCategory');
 exports.frontUserFriendsRouter = require('./frontend/UserFriends');
+exports.frontUploadsRouter = require('./frontend/Uploads');
