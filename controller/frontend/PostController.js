@@ -1,6 +1,7 @@
 const postModel = require("../../models/frontend/Post"); // Importing the Post model
 const userModel = require("../../models/frontend/User");
-const { postCategory } = require("../../models/index"); // Importing the postCategory model
+const userFriends = require("../../models/frontend/UserFriends");
+const postCommentsModel = require("../../models/frontend/PostComments");
 const { validatorMake } = require("../../helper/General"); // Importing the validatorMake function
 const { populate } = require("dotenv"); // Importing the populate function from dotenv
 const { error } = require("console");
@@ -332,24 +333,15 @@ const userPost = async (req, res) => {
 };
 
 const featuredPost = async (req, res) => {
-  let postUser = await userModel.getLoginUserId(req);
-  let userid = postUser._id;
+  let select = ["first_name", "last_name"];
 
-  let select = ["title", "description"];
+  let postUser = await userModel.getFeaturedPost(req, select);
 
-  let where = {
-    user_id: userid,
-  };
-
-  let data = await postModel.getListing(req, select, where);
-  let count = await postModel.getCounts(where);
-
-  if (data) {
+  if (postUser) {
     res.send({
       status: true,
       message: "Data Fetch Successfully",
-      total: count,
-      data: data,
+      data: postUser,
     });
   } else {
     res.send({
@@ -357,6 +349,42 @@ const featuredPost = async (req, res) => {
       message: "No Data Found",
       data: [],
     });
+  }
+};
+
+const answerPost = async (req, res) => {
+  let postUser = await userModel.getLoginUser(req);
+  let userid = postUser._id;
+
+  if (userid) {
+    let select = ["author", "post_id"];
+
+    let joins = [
+      {
+        path: "post_id",
+        select: ["title", "description"],
+      },
+    ];
+
+    let where = {
+      user_id: userid,
+    };
+
+    let data = await postCommentsModel.getListing(req, select, where, joins);
+
+    if (data) {
+      res.send({
+        status: true,
+        message: "Data Fetch Successfully",
+        data: data,
+      });
+    } else {
+      res.send({
+        status: false,
+        message: "No Data Found",
+        data: [],
+      });
+    }
   }
 };
 
@@ -369,4 +397,5 @@ module.exports = {
   deleteRow,
   userPost,
   featuredPost,
+  answerPost,
 };
