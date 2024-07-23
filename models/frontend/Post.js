@@ -1,6 +1,6 @@
 const { post } = require('../index'); // Importing the 'post' model from '../index' file
 const { foreach } = require('../../helper/General'); // Importing the 'foreach' function from '../../helper/General' file
-const { lookup } = require('dns');
+const userModel = require('./User')
 
 const insert = async (data) => {
     try {
@@ -282,6 +282,8 @@ const getPostId = async (req) => {
 
 const getListingbyUserID = async (req, select = {}, where = {}, joins = []) => {
     try {
+        let loginId = await userModel.getLoginUserId(req);
+        
         let { sort, direction, limit, offset, page } = req.query;
 
         direction = direction && direction == 'asc' ? 1 : -1;
@@ -310,6 +312,30 @@ const getListingbyUserID = async (req, select = {}, where = {}, joins = []) => {
                                 '_id': 1,
                                 'first_name': 1,
                                 'last_name': 1
+                            }
+                        }
+                    ]
+                },
+
+            },
+            {
+                $lookup: {
+                    from: 'post_votes',
+                    localField: '_id',
+                    foreignField: 'post_id',
+                    as: 'user_vote',
+                    pipeline: [
+                        {
+                            $match:{
+                                user_id:loginId._id
+                            }
+                        },
+                        {
+                            $project:{
+                                '_id':1,
+                                "user_id":1,
+                                "post_id":1,
+                                "type":1,
                             }
                         }
                     ]
@@ -391,11 +417,11 @@ const getListingbyUserID = async (req, select = {}, where = {}, joins = []) => {
                 }
             },
             {
-                $limit: limit
+                $skip:offset
             },
-            // {
-            //     $skip:1
-            // },
+            {
+                $limit: limit
+            }, 
             {
                 $sort: {
                     [sortField]: direction
@@ -419,6 +445,12 @@ const getListingbyUserID = async (req, select = {}, where = {}, joins = []) => {
                     path: "$up_votes",
                     preserveNullAndEmptyArrays: true,
                     includeArrayIndex: "up_votes_count",
+                }
+            },
+            {
+                $unwind: {
+                    path: "$user_vote",
+                    preserveNullAndEmptyArrays: true,
                 }
             }
         ])
