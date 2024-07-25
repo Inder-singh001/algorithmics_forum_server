@@ -9,6 +9,10 @@ postRouter.post('/post/update/:id',PostController.update);
 postRouter.post('/post/update-status/:id',PostController.updateStatus);
 postRouter.get('/post/delete/:id',PostController.deleteRow);
 
+postRouter.get('/post/featured-post',PostController.featuredPost);
+postRouter.get('/post/answer-post',PostController.answerPost);
+
+
 postRouter.get('/user/post',PostController.userPost);
 
 module.exports =  postRouter;

@@ -884,7 +884,7 @@ const logout = async (req, res) => {
 	else {
 		res.send({
 			status: false,
-			message: validatorRules.errors,
+			message: "Error occurred at our end!",
 		});
 	}
 };
