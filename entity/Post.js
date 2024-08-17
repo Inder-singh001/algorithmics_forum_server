@@ -20,7 +20,7 @@ module.exports = (dbConnection, { Schema }) => {
             required: false
         },
         file: {
-            type: String, //"/uploads/jsbgsghsreg.pdf"
+            type: String,
             required: false
         },
         status: {

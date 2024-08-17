@@ -10,6 +10,7 @@ const {
 	sendMail,
 	encrypt,
 	generatePassword,
+	getBearerToken,
 } = require("../../helper/General");
 const userCategoryModel = require("../../models/frontend/UserCategory");
 
@@ -269,8 +270,6 @@ const signup = async (req, res) => {
 		data.email_verified = null;
 		data.otp = getRandomNumber(6);
 		data.token = getHash(64);
-		data.token_expiry_at = _datetime(null, 30);
-
 		let resp = await userModel.insert(data);
 		if (resp) {
 			sendMail(data.email, "One Time Password", `<h1>${data.otp}</h1>`);
@@ -365,7 +364,7 @@ const verifyOtp = async (req, res) => {
 					email_verified: 1,
 					email_verified_at: _datetime(),
 					otp: null,
-					token: null,
+					// token: null,
 				};
 				let userUpdate = await userModel.update(resp._id, update);
 				if (userUpdate) {
@@ -428,6 +427,7 @@ const login = async (req, res) => {
 					let update = {
 						login_token: getHash(64),
 						last_login_at: _datetime(),
+						token_expiry_at: _datetime(null, 30)
 					};
 					let userUpdate = await userModel.update(resp._id, update);
 					let categoryCount = await userCategoryModel.getCounts({ user_id: resp._id })
@@ -492,6 +492,7 @@ const login = async (req, res) => {
 };
 
 const changePassword = async (req, res) => {
+
 	let data = req.body;
 	let validatorRules = await validatorMake(data, {
 		email: "required|email",
@@ -516,13 +517,13 @@ const changePassword = async (req, res) => {
 					sendMail(data.email, "One Time Password", `<h1>${data.otp}</h1>`);
 					res.send({
 						status: true,
-						message: "User Found",
+						message: "The OTP has sent to your mail.",
 						data: updateResp,
 					});
 				} else {
 					res.send({
 						status: false,
-						message: "Failed to send Email",
+						message: "Failed to send OTP.",
 						data: updateResp,
 					});
 				}
@@ -564,7 +565,7 @@ const changePassword = async (req, res) => {
 	} else {
 		res.send({
 			status: false,
-			message: "Email Formal Invalid",
+			message: "Email Format Invalid",
 			data: validatorRules.errors,
 		});
 	}
@@ -572,72 +573,43 @@ const changePassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
 	try {
-		// Extract the data from the request body
 		let data = req.body;
-
-		// Validate the input data using validatorMake
 		let validatorRules = await validatorMake(data, {
 			token: "required",
 			password: "required|confirmed",
 			password_confirmation: "required",
 		});
 
-		// Check if the validation rules pass
 		if (!validatorRules.fails()) {
-			// Retrieve the user row based on the provided token
 			let resp = await userModel.getRow({ token: data.token });
-
-			// If the user is found
 			if (resp) {
-				// Prepare the update object with the new password
 				let update = { password: data.password };
-
-				// Update the user's password in the database using the token
-				let updateResp = await userModel.update({ token: data.token }, update);
-
-				// If the update was successful
+				let updateResp = await userModel.update(resp._id, update);
 				if (updateResp) {
-					// Retrieve the updated user row
-					let user = await userModel.getRow({ token: data.token });
-
-					// If the updated user row is found
-					if (user) {
-						// Send a confirmation email to the user
-						sendMail(
-							user.email,
-							"Password Updated Successfully",
-							"<h1>Password Updated</h1>"
-						);
-
-						// Send a success response back to the client
-						return res.send({
-							status: true,
-							message: "Password Updated Successfully",
-							data: updateResp,
-						});
-					} else {
-						// If the user row is not found after the update, send an error response
-						return res.send({
-							status: false,
-							message: "User not found after update",
-						});
-					}
+					sendMail(
+						resp.email,
+						"Password Updated Successfully",
+						"<h1>Password Updated</h1>"
+					);
+					return res.send({
+						status: true,
+						message: "Password Updated Successfully",
+						data: updateResp,
+					});
 				} else {
-					// If the update failed, send an error response
 					return res.send({
 						status: false,
 						message: "Failed to update password",
 					});
 				}
 			} else {
-				// If the user row is not found based on the token, send an error response
+
 				return res.send({
 					status: false,
-					message: "Invalid token",
+					message: "User not found.",
 				});
 			}
 		} else {
-			// If validation fails, send validation errors
 			return res.send({
 				status: false,
 				message: "Validation Failed",
@@ -645,10 +617,7 @@ const resetPassword = async (req, res) => {
 			});
 		}
 	} catch (error) {
-		// Log the error for debugging purposes
-		console.error("Error in resetPassword:", error);
-
-		// Send a generic error response
+		console.error("Error in reset Password:", error);
 		return res.status(500).send({
 			status: false,
 			message: "An unexpected error occurred",
@@ -889,6 +858,23 @@ const logout = async (req, res) => {
 	}
 };
 
+const checkLogin = async (req, res) => {
+	let token = getBearerToken(req);
+	console.log(token)
+	if (token === null) {
+		res.send({
+			status: false,
+			message: "user not logged in!"
+		})
+	}
+	else {
+		res.send({
+			status: true,
+			message: "user is logged in!"
+		})
+	}
+}
+
 module.exports = {
 	add,
 	detail,
@@ -905,5 +891,6 @@ module.exports = {
 	editPassword,
 	profile,
 	userComment,
-	logout
+	logout,
+	checkLogin
 };
