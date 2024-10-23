@@ -10,7 +10,7 @@ module.exports = (dbConnection, { Schema }) => {
         user_id: {
             type: ObjectId,
             required: false,
-            ref: "post",
+            ref: "user",
         },
         post_id: {
             type: ObjectId,

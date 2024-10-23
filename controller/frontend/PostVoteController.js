@@ -262,10 +262,22 @@ const postVote = async (req, res) => {// This function handles processing a user
 
           if (resp) 
             {// If insertion is successful
+              let upCount = await postVoteModel.getCounts({'post_id':post._id,"type":1})
+              let downCount = await postVoteModel.getCounts({'post_id':post._id,"type":0})
+              let isUserDownVote = await postVoteModel.getCounts({'post_id':post._id,"type":0,"user_id":user_id._id})
+              let isUserUpVote = await postVoteModel.getCounts({'post_id':post._id,"type":1,"user_id":user_id._id})
               res.send({
                 status: true,
                 message: "Vote Registered Successfully",
                 data: resp,
+                count:{
+                  upCount,
+                  downCount
+                },
+                userAction:{
+                  isUserDownVote,
+                  isUserUpVote
+                }
               });// Send a success response with the inserted data
             }
             else 
@@ -282,10 +294,22 @@ const postVote = async (req, res) => {// This function handles processing a user
           let response = await postVoteModel.update(checkVote._id,{'type':data.type});
           if (response)
             {
+              let upCount = await postVoteModel.getCounts({'post_id':post._id,"type":1})
+              let downCount = await postVoteModel.getCounts({'post_id':post._id,"type":0})
+              let isUserDownVote = await postVoteModel.getCounts({'post_id':post._id,"type":0,"user_id":user_id._id})
+              let isUserUpVote = await postVoteModel.getCounts({'post_id':post._id,"type":1,"user_id":user_id._id})
               res.send({
                 status: true,
                 message: "Updated Resposnse",
                 data:response,
+                count:{
+                  upCount,
+                  downCount
+                },
+                userAction:{
+                  isUserDownVote,
+                  isUserUpVote
+                }
               });// Send a response indicating duplicate vote attempt with an empty data array
             }
             else 
@@ -302,10 +326,22 @@ const postVote = async (req, res) => {// This function handles processing a user
           let resp = await postVoteModel.remove(checkVote._id);
           if(resp)
           {
+            let upCount = await postVoteModel.getCounts({'post_id':post._id,"type":1})
+            let downCount = await postVoteModel.getCounts({'post_id':post._id,"type":0})
+            let isUserDownVote = await postVoteModel.getCounts({'post_id':post._id,"type":0,"user_id":user_id._id})
+              let isUserUpVote = await postVoteModel.getCounts({'post_id':post._id,"type":1,"user_id":user_id._id})
             res.send({
               status: true,
               message: "Vote Deleted",
               data: [],
+              count:{
+                upCount,
+                downCount
+              },
+              userAction:{
+                isUserDownVote,
+                isUserUpVote
+              }
             });
           }
           else

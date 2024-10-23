@@ -38,7 +38,7 @@ const getById = async (id, select = [], joins = []) => {
     {   
         let record = await postVote.findById(id,select);
         
-        if(joins)
+        if(joins && joins.length > 0)
         {
             record = record.populate(joins)
         }

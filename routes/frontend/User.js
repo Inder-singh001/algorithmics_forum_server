@@ -15,6 +15,7 @@ userRouter.post('/user/resend-otp',UserController.resendOtp);
 userRouter.post('/user/verify-otp',UserController.verifyOtp);
 userRouter.post('/user/login',UserController.login);
 userRouter.post('/user/logout',UserController.logout);
+userRouter.get('/check-login',UserController.checkLogin);
 userRouter.post('/user/change-password',UserController.changePassword);
 userRouter.post('/user/reset-password',UserController.resetPassword);
 userRouter.post('/user/edit-password',UserController.editPassword);

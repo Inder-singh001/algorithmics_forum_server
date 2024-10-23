@@ -335,10 +335,27 @@ const addComments = async (req, res) => {
     if (!validatorRules.fails()) {
       let resp = await postCommentsModel.insert(data); // Inserting the post data into the database
       if (resp) {
+        let select = [
+          '_id',
+          'user_id',
+          'description',
+          'created_at'
+        ];
+        let joins = [
+          {
+            path:'user_id',
+            select:[
+              '_id',
+              'first_name',
+              'last_name'
+            ],
+          }
+        ]
+        let getComment = await postCommentsModel.getById(resp._id, select, joins)
         res.send({
           status: true,
-          message: "Comment added",
-          data: resp,
+          message: "Comment added hh",
+          data: getComment,
         });
       } else {
         res.send({
