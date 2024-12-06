@@ -4,7 +4,6 @@
   "description": "MongoDB",
   "main": "app.js",
   "scripts": {
-    "test": "test",
     "start": "nodemon app.js"
   },
   "author": "Group",
